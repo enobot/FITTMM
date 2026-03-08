@@ -32,16 +32,80 @@
   margin-bottom: 24px;
 }
 
-.signup-box p {
-  margin: 0 0 16px;
+.signup-box input[type="text"],
+.signup-box input[type="email"],
+.signup-box input[type="password"],
+.signup-box input[type="number"],
+.signup-box input[type="date"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.signup-box input:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.signup-error {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #c00;
+}
+
+.signup-gender {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+
+.signup-gender label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #444;
+  cursor: pointer;
+}
+
+.signup-gender input[type="radio"] {
+  width: auto;
+  margin: 0;
+}
+
+.signup-box button {
+  width: 50%;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #333;
+  color: #fff;
+}
+
+.signup-box button:hover {
+  background-color: #555;
+}
+
+.signup-login-prompt {
+  margin-top: 20px;
+  margin-bottom: 0;
+  font-size: 14px;
   color: #444;
 }
 
-.signup-box a {
+.signup-login-prompt a {
   color: #1a73e8;
   text-decoration: none;
 }
 
-.signup-box a:hover {
+.signup-login-prompt a:hover {
   text-decoration: underline;
 }

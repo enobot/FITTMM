@@ -16,7 +16,12 @@ function Login() {
 
   return (
     <div className="login-page">
-      <div className="login-box">
+      <p className="login-quote">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      </p>
+      <div className="login-center">
+        <div className="login-brand">FITTMM</div>
+        <div className="login-box">
         <h1>Login</h1>
 
         <form onSubmit={handleSubmit}>
@@ -40,6 +45,7 @@ function Login() {
             Don't have an account? <Link to="/signup">Sign up</Link>
           </p>
         </form>
+      </div>
       </div>
     </div>
   );
