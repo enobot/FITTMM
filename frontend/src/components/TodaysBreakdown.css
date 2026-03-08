@@ -1,0 +1,121 @@
+.todays-breakdown {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.todays-breakdown-title {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.todays-breakdown-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  width: 100%;
+}
+
+.todays-breakdown-loading,
+.todays-breakdown-empty,
+.todays-breakdown-content {
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #555;
+  max-width: 100%;
+}
+
+.todays-breakdown-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.todays-breakdown-btn {
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todays-breakdown-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.todays-breakdown-btn:active {
+  transform: scale(0.98);
+}
+
+.todays-breakdown-btn-primary {
+  background-color: #333;
+  color: #fff;
+}
+
+.todays-breakdown-btn-primary:hover {
+  background-color: #555;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.todays-breakdown-btn-secondary {
+  background-color: #e0e0e0;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.todays-breakdown-btn-secondary:hover {
+  background-color: #d0d0d0;
+  border-color: #bbb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Dark mode (when parent has .homepage--dark) */
+.homepage--dark .todays-breakdown-title {
+  color: #e8e8e8;
+}
+
+.homepage--dark .todays-breakdown-loading,
+.homepage--dark .todays-breakdown-empty,
+.homepage--dark .todays-breakdown-content {
+  color: #bbb;
+}
+
+.homepage--dark .todays-breakdown-btn-primary {
+  background-color: #4a4a4a;
+  color: #fff;
+}
+
+.homepage--dark .todays-breakdown-btn-secondary {
+  background-color: #3a3a3a;
+  color: #e8e8e8;
+  border-color: #555;
+}
+
+.homepage--dark .todays-breakdown-btn-primary:hover {
+  background-color: #666;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.homepage--dark .todays-breakdown-btn-secondary:hover {
+  background-color: #4a4a4a;
+  border-color: #666;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}

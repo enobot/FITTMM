@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Homepage.css";
+import TodaysBreakdown from "../components/TodaysBreakdown";
+import PlateCalculator from "../components/PlateCalculator";
 
 const USER_NAME = "Tracy"; // TODO: get from auth/session
 
@@ -61,7 +63,7 @@ function Homepage() {
 
       <main className="homepage-main">
         <section className="homepage-section">
-          <h2 className="homepage-section-title">Today's breakdown</h2>
+          <TodaysBreakdown isDark={isDark} />
         </section>
         <section className="homepage-section">
           <h2 className="homepage-section-title">My Progress</h2>
@@ -70,7 +72,7 @@ function Homepage() {
           <h2 className="homepage-section-title">Weekly Calendar</h2>
         </section>
         <section className="homepage-section">
-          <h2 className="homepage-section-title">Monthly Calendar</h2>
+          <PlateCalculator isDark={isDark} />
         </section>
       </main>
     </div>
