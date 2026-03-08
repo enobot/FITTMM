@@ -1,27 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import "./Login.css";
 
 function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (email.trim() && password.trim()) {
+      navigate("/homepage");
+    }
+  };
+
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-      <div style={{ width: 350 }}>
+    <div className="login-page">
+      <div className="login-box">
         <h1>Login</h1>
 
-        <form>
+        <form onSubmit={handleSubmit}>
           <input
             type="email"
             placeholder="Email"
-            style={{ width: "100%", padding: 10, marginBottom: 10 }}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           <input
             type="password"
             placeholder="Password"
-            style={{ width: "100%", padding: 10, marginBottom: 10 }}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button style={{ width: "100%", padding: 10 }}>
-            Log In
-          </button>
+          <button type="submit">Log In</button>
+
+          <p className="login-signup-prompt">
+            Don't have an account? <Link to="/signup">Sign up</Link>
+          </p>
         </form>
       </div>
     </div>
