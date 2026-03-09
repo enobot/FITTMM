@@ -20,6 +20,8 @@ function Homepage() {
   }, []);
 
   const handleLogout = () => {
+    // Clear the token from browser storage
+    localStorage.removeItem("token");
     navigate("/");
   };
 

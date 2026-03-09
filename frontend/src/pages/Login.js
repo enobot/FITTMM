@@ -5,12 +5,34 @@ import "./Login.css";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email.trim() && password.trim()) {
-      navigate("/homepage");
+    setError("");
+
+    const formData = new URLSearchParams();
+    formData.append("username", email); // FastAPI OAuth2 uses 'username'
+    formData.append("password", password);
+
+    try {
+      const response = await fetch("http://localhost:8000/api/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Save token to browser storage
+        localStorage.setItem("token", data.access_token);
+        navigate("/homepage");
+      } else {
+        setError("Incorrect email or password.");
+      }
+    } catch (err) {
+      setError("Could not connect to the server. Please try again later.");
     }
   };
 
@@ -23,6 +45,7 @@ function Login() {
         <div className="login-brand">FITTMM</div>
         <div className="login-box">
         <h1>Login</h1>
+        {error && <p className="login-error">{error}</p>}
 
         <form onSubmit={handleSubmit}>
           <input

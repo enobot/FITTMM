@@ -66,7 +66,7 @@ Replace 'somepassword' with any password you choose
 ```
 CREATE USER 'fitness_user'@'localhost' IDENTIFIED BY 'somepassword';
 
-GRANT ALL PRIVILEGES ON fitness_app.\* TO 'fitness_user'@'localhost';
+GRANT ALL PRIVILEGES ON fitness_app.* TO 'fitness_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -78,9 +78,14 @@ Open and add:
 
 ```
 DATABASE_URL=mysql+mysqlconnector://fitness_user:somepassword@localhost/fitness_app
-```
 
 Replace 'somepassword' with the password you created in the previous step
+
+
+SECRET_KEY= use command below to create a secret key and paste here
+
+python -c "import secrets; print(secrets.token_hex(32))"
+```
 
 ## Run Alembic to create/update tables
 
