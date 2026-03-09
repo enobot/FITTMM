@@ -1,8 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import bmi
+from routers import bmi, auth
+from defaultuser import register_default_user
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup:
+    register_default_user()
+
+    yield
+
+    # Shutdown:
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -13,7 +24,10 @@ app.add_middleware(
 )
 
 app.include_router(bmi.router, prefix="/api")
+app.include_router(auth.router, prefix="/auth")
 
 @app.get("/")
 def root():
     return {"message": "Fitness App API Running"}
+
+

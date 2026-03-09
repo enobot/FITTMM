@@ -4,3 +4,4 @@ sqlalchemy
 mysql-connector-python
 alembic
 python-dotenv
+pwdlib[argon2]
