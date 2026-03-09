@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from database import Base
+from core.database import Base
 
 from logging.config import fileConfig
 
