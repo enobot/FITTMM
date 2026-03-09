@@ -24,7 +24,9 @@ class User(Base):
     weight = Column(Float)
     height = Column(Float)
 
-# Create the tables in the database
-# Base.metadata.create_all(engine)
-
-print("Tables created successfully!")
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
