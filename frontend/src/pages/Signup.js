@@ -13,15 +13,35 @@ function Signup() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
-    // TODO: submit to backend
-    navigate("/homepage");
+
+    // Submit to backend
+    try {
+      const response = await fetch("http://localhost:8000/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Note: Currently only accepts email and password.
+        // The other fields (name, birthday, etc) are not being sent yet.
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        // On successful signup, send to the login page.
+        navigate("/");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || "Registration failed. Please try again.");
+      }
+    } catch (err) {
+      setError("Could not connect to the server. Please try again later.");
+    }
   };
 
   return (

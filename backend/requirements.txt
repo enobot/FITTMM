@@ -4,3 +4,5 @@ sqlalchemy
 mysql-connector-python
 alembic
 python-dotenv
+email-validator
+pydantic-settings
