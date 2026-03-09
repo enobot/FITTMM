@@ -1,9 +1,7 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from database import SessionLocal, User
+from core.database import SessionLocal, User
 from datetime import date
 from sqlalchemy import func 
-from core.security import hash_password
+from core.security import get_password_hash
 
 def register_default_user():
     session = SessionLocal()
@@ -17,7 +15,7 @@ def register_default_user():
     date_of_birth = date(2000, 1, 1)
 
     # Hash the given password to store in the database
-    password_hash = hash_password(password)
+    password_hash = get_password_hash(password)
 
     # Check if an account with that email already exists in the database
     existing_user = session.query(User).where(func.lower(User.email) == email.lower()).first()
