@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./TodaysBreakdown.css";
 
 // TODO: replace with API call to check if user has a workout plan
 function TodaysBreakdown({ isDark = false }) {
+  const navigate = useNavigate();
   const [hasWorkoutPlan, setHasWorkoutPlan] = useState(null);
 
   useEffect(() => {
@@ -12,7 +14,7 @@ function TodaysBreakdown({ isDark = false }) {
   }, []);
 
   const handleYes = () => {
-    // TODO: navigate to create workout plan or open modal
+    navigate("/plan/new");
   };
 
   const handleNoJkYes = () => {
