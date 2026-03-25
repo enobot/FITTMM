@@ -55,9 +55,6 @@ function Signup() {
       weight: 180,
       height: 63,
     };
-    if (gender) {
-      payload.gender = gender;
-    }
 
     try {
       const response = await fetch("http://localhost:8000/auth/register", {
