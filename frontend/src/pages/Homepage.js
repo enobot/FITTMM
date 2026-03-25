@@ -5,6 +5,7 @@ import TodaysBreakdown from "../components/TodaysBreakdown";
 import PlateCalculator from "../components/PlateCalculator";
 
 const USER_NAME = "Tracy"; // TODO: get from auth/session
+const WEEK_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function Homepage() {
   const navigate = useNavigate();
@@ -17,6 +18,34 @@ function Homepage() {
       month: "long",
       day: "numeric",
     });
+  }, []);
+
+  const todayName = useMemo(
+    () => new Date().toLocaleDateString("en-US", { weekday: "long" }),
+    []
+  );
+
+  const weeklyPlan = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("fittmm_plan_day_selections");
+      const parsed = raw ? JSON.parse(raw) : {};
+      const hasAnySelections = Object.values(parsed).some(
+        (items) => Array.isArray(items) && items.length > 0
+      );
+      return WEEK_DAYS.map((day) => ({
+        day,
+        short: day.slice(0, 3),
+        exercises: Array.isArray(parsed[day]) ? parsed[day] : [],
+        hasAnySelections,
+      }));
+    } catch {
+      return WEEK_DAYS.map((day) => ({
+        day,
+        short: day.slice(0, 3),
+        exercises: [],
+        hasAnySelections: false,
+      }));
+    }
   }, []);
 
   const handleLogout = () => {
@@ -36,12 +65,6 @@ function Homepage() {
             className="homepage-nav-btn homepage-nav-link"
           >
             Create a plan
-          </Link>
-          <Link
-            to="/workout/new"
-            className="homepage-nav-btn homepage-nav-link"
-          >
-            New workout
           </Link>
           <button
             type="button"
@@ -83,7 +106,32 @@ function Homepage() {
           <h2 className="homepage-section-title">My Progress</h2>
         </section>
         <section className="homepage-section">
-          <h2 className="homepage-section-title">Weekly Calendar</h2>
+          <h2 className="homepage-section-title">Weekly</h2>
+          <div className="homepage-weekly">
+            <div className="homepage-weekly-grid">
+              {weeklyPlan.map((slot) => (
+                <article
+                  key={slot.day}
+                  className={`homepage-weekly-day ${
+                    slot.day === todayName ? "homepage-weekly-day--current" : ""
+                  }`}
+                >
+                  <h3 className="homepage-weekly-day-title">{slot.short}</h3>
+                  {!slot.hasAnySelections ? null : slot.exercises.length === 0 ? (
+                    <p className="homepage-weekly-rest">REST</p>
+                  ) : (
+                    <ul className="homepage-weekly-list">
+                      {slot.exercises.map((exercise) => (
+                        <li key={`${slot.day}-${exercise}`} className="homepage-weekly-item">
+                          {exercise}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </article>
+              ))}
+            </div>
+          </div>
         </section>
         <section className="homepage-section">
           <PlateCalculator isDark={isDark} />

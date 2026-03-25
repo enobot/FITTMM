@@ -1,0 +1,81 @@
+.done-creating {
+  min-height: 100vh;
+  background: #f5f6f8;
+  color: #2f3f4f;
+  box-sizing: border-box;
+  padding: 72px 24px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.done-creating-content {
+  margin-top: 135px;
+  text-align: center;
+  max-width: 460px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.done-creating-copy {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.done-creating-action {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.done-creating-btn {
+  background: #5f5ce6;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 26px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.done-creating-spongebob {
+  width: 510px;
+  height: auto;
+  object-fit: contain;
+}
+
+.done-creating-quote {
+  margin: 0;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #4b5563;
+  text-align: center;
+}
+
+.done-creating-dots {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+}
+
+.done-creating-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #b9c6d3;
+  background: #f5f6f8;
+}
+
+.done-creating-dot--active {
+  border-color: #4f94f0;
+}

@@ -86,6 +86,10 @@ function CreateAPlan() {
 
   const goNext = () => {
     if (step === 0 && !canGoNextFromStep0) return;
+    if (step === 0) {
+      navigate("/listOfExercises");
+      return;
+    }
     if (step === 1 && !canGoNextFromStep1) return;
     if (step < TOTAL_STEPS - 1) setStep((s) => s + 1);
   };
