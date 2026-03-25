@@ -1,0 +1,135 @@
+.list-exercises {
+  min-height: 100vh;
+  background: #f5f6f8;
+  color: #263645;
+  padding: 24px 32px 28px;
+  box-sizing: border-box;
+}
+
+.list-exercises-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.list-exercises-back {
+  align-self: flex-start;
+  background: #d7e2ec;
+  border: 1px solid #c3d2e0;
+  color: #2f3f4f;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.list-exercises-day {
+  min-width: 180px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #b9c7d4;
+  background: #fff;
+}
+
+.list-exercises-continue {
+  background: #5f5ce6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 26px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.list-exercises-panel {
+  border: 2px solid #c8d5e2;
+  padding: 12px 18px 6px;
+  background: #f7f9fb;
+}
+
+.list-exercises-head {
+  display: grid;
+  grid-template-columns: 1fr 360px 120px;
+  gap: 10px;
+  align-items: center;
+}
+
+.list-exercises-link {
+  color: #5f5ce6;
+  font-size: 0.95rem;
+}
+
+.list-exercises-search {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #bccad7;
+  border-radius: 4px;
+}
+
+.list-exercises-filter {
+  padding: 9px 12px;
+  border: 1px solid #bccad7;
+  border-radius: 4px;
+  background: #eef3f7;
+}
+
+.list-exercises-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.list-exercises-card {
+  border: 2px solid #c8d5e2;
+  background: #fff;
+  min-height: 128px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.list-exercises-card--selected {
+  border-color: #4f94f0;
+  background: #e9f2ff;
+}
+
+.list-exercises-img {
+  width: 82px;
+  height: 68px;
+  border-radius: 4px;
+  background: #e9eef4;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+}
+
+.list-exercises-name {
+  font-weight: 700;
+  text-align: center;
+}
+
+.list-exercises-dots {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+}
+
+.list-exercises-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #b9c6d3;
+  background: #f5f6f8;
+}
+
+.list-exercises-dot--active {
+  border-color: #4f94f0;
+}

@@ -21,15 +21,19 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "./pages/Login";
 import Homepage from "./pages/Homepage";
 import Signup from "./pages/Signup";
-import CreateWorkout from "./components/CreateWorkout";
 import CreateAPlan from "./components/CreateAPlan";
+import ListOfExercises from "./components/ListOfExercises";
+import DoubleCheck from "./components/DoubleCheck";
+import DoneCreating from "./components/DoneCreating";
 
 const router = createBrowserRouter([
   { path: "/", element: <Login /> },
   { path: "/homepage", element: <Homepage /> },
   { path: "/signup", element: <Signup /> },
-  { path: "/workout/new", element: <CreateWorkout /> },
   { path: "/plan/new", element: <CreateAPlan /> },
+  { path: "/listOfExercises", element: <ListOfExercises /> },
+  { path: "/doublecheck", element: <DoubleCheck /> },
+  { path: "/doneCreating", element: <DoneCreating /> },
 ]);
 
 function App() {

@@ -156,3 +156,124 @@
 .homepage--dark .homepage-section-title {
   color: #e8e8e8;
 }
+
+.homepage-weekly {
+  width: 100%;
+  margin-top: 12px;
+  border: 2px solid #c8d5e2;
+  background: #f7f9fb;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.homepage-weekly-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(52px, 1fr));
+  gap: 10px;
+}
+
+.homepage-weekly-day {
+  border: 2px solid #c8d5e2;
+  background: #fff;
+  width: 100%;
+  height: auto;
+  min-height: 110px;
+  aspect-ratio: 1 / 1.55;
+  padding: 8px 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.homepage-weekly-day--current {
+  border-color: #3b82f6;
+  background: #eaf3ff;
+}
+
+.homepage-weekly-day-title {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+  color: #334155;
+  padding-bottom: 6px;
+  border-bottom: 3px solid #b8c6d3;
+}
+
+.homepage-weekly-list {
+  margin: 0;
+  padding-left: 14px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.homepage-weekly-item {
+  font-size: 0.9rem;
+  line-height: 1.25;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.homepage-weekly-rest {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  color: #475569;
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 900px) {
+  .homepage-weekly-grid {
+    gap: 6px;
+    grid-template-columns: repeat(7, minmax(44px, 1fr));
+  }
+
+  .homepage-weekly-day {
+    padding: 6px 4px;
+  }
+
+  .homepage-weekly-day-title {
+    font-size: 0.85rem;
+    padding-bottom: 5px;
+    border-bottom-width: 2px;
+  }
+
+  .homepage-weekly-list {
+    padding-left: 10px;
+    gap: 2px;
+  }
+
+  .homepage-weekly-item {
+    font-size: 0.78rem;
+    line-height: 1.1;
+  }
+}
+
+.homepage--dark .homepage-weekly {
+  border-color: #49596a;
+  background: #222b33;
+}
+
+.homepage--dark .homepage-weekly-day {
+  border-color: #49596a;
+  background: #1b232b;
+}
+
+.homepage--dark .homepage-weekly-day--current {
+  border-color: #60a5fa;
+  background: #1d3249;
+}
+
+.homepage--dark .homepage-weekly-day-title,
+.homepage--dark .homepage-weekly-item,
+.homepage--dark .homepage-weekly-rest {
+  color: #dbe6f2;
+}
