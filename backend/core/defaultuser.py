@@ -13,6 +13,7 @@ def register_default_user():
     weight = 180
     height = 63
     date_of_birth = date(2000, 1, 1)
+    gender = "male"
 
     # Hash the given password to store in the database
     password_hash = get_password_hash(password)
@@ -22,7 +23,7 @@ def register_default_user():
     if not existing_user:
         # Create a new user with the given data
         user = User(fname = fname, lname = lname, email = email.lower(), password_hash = password_hash,
-            date_of_birth = date_of_birth, weight = weight, height = height)
+            date_of_birth = date_of_birth, gender = gender, weight = weight, height = height)
         
         session.add(user)
         session.commit()
