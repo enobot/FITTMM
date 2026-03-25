@@ -19,20 +19,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     return schemas.Token(access_token=access_token, token_type="bearer")
 
 @router.post("/register", response_model=schemas.UserReturn)
-def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
-    email_norm = str(payload.email).lower()
-    db_user = crud.get_user_by_email(db, email=email_norm)
+def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    # gender is accepted for API/UI parity; no users.gender column yet — ignored here
-    user = schemas.UserCreate(
-        email=payload.email,
-        password=payload.password,
-        fname=payload.fname.strip(),
-        lname=payload.lname.strip(),
-        weight=payload.weight,
-        height=payload.height,
-        date_of_birth=payload.date_of_birth,
-    )
     new_user = crud.create_user(db=db, user=user)
     return schemas.UserReturn(id=new_user.id, email=new_user.email)

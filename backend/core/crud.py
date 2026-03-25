@@ -4,7 +4,7 @@ from core.database import User, SessionLocal
 from core import security
 
 def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email.lower()).first()
+    return db.query(User).filter(User.email == email).first()
 
 def authenticate_user(db: Session, email: str, password: str):
     user = get_user_by_email(db, email)
