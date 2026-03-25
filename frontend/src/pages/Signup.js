@@ -52,6 +52,7 @@ function Signup() {
       fname: firstName.trim(),
       lname: lastName.trim(),
       date_of_birth: birthday,
+      gender: gender.trim(),
       weight: 180,
       height: 63,
     };

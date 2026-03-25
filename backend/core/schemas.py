@@ -7,10 +7,11 @@ class UserCreate(BaseModel):
     password: str
     fname: str
     lname: str
+    date_of_birth: date
+    gender: str
     weight: float
     height: int
-    date_of_birth: date
-
+    
 # Properties to return
 class UserReturn(BaseModel):
     id: int
