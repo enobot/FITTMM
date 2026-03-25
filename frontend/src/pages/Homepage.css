@@ -72,6 +72,26 @@
   transition: background-color 0.2s, border-color 0.2s;
 }
 
+.homepage-nav-link {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.homepage-nav-link:hover {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+}
+
+.homepage--dark .homepage-nav-link {
+  border-color: #555;
+  color: #e8e8e8;
+}
+
+.homepage--dark .homepage-nav-link:hover {
+  background-color: #404040;
+  border-color: #666;
+}
+
 .homepage-nav-btn:hover {
   background-color: #f0f0f0;
   border-color: #ccc;

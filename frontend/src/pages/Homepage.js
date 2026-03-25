@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./Homepage.css";
 import TodaysBreakdown from "../components/TodaysBreakdown";
 import PlateCalculator from "../components/PlateCalculator";
@@ -31,6 +31,18 @@ function Homepage() {
         <span className="homepage-nav-date">{dateString}</span>
         <span className="homepage-nav-greeting">Hi, {USER_NAME}!</span>
         <div className="homepage-nav-actions">
+          <Link
+            to="/plan/new"
+            className="homepage-nav-btn homepage-nav-link"
+          >
+            Create a plan
+          </Link>
+          <Link
+            to="/workout/new"
+            className="homepage-nav-btn homepage-nav-link"
+          >
+            New workout
+          </Link>
           <button
             type="button"
             className="homepage-nav-btn"

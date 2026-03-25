@@ -13,31 +13,67 @@ function Signup() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  const parseRegisterError = (data) => {
+    if (!data || data.detail == null) return "Registration failed. Please try again.";
+    if (typeof data.detail === "string") return data.detail;
+    if (Array.isArray(data.detail)) {
+      return data.detail
+        .map((item) => (item && typeof item.msg === "string" ? item.msg : JSON.stringify(item)))
+        .join(" ");
+    }
+    return "Registration failed. Please try again.";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("Please enter your first and last name.");
+      return;
+    }
+    if (!birthday) {
+      setError("Please select your birthday.");
+      return;
+    }
+    if (!email.trim() || !password) {
+      setError("Please enter email and password.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
-    // Submit to backend
+    const payload = {
+      email: email.trim(),
+      password,
+      fname: firstName.trim(),
+      lname: lastName.trim(),
+      date_of_birth: birthday,
+      weight: 180,
+      height: 63,
+    };
+    if (gender) {
+      payload.gender = gender;
+    }
+
     try {
-      const response = await fetch("http://localhost:8000/api/users", {
+      const response = await fetch("http://localhost:8000/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Note: Currently only accepts email and password.
-        // The other fields (name, birthday, etc) are not being sent yet.
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        // On successful signup, send to the login page.
         navigate("/");
       } else {
-        const errorData = await response.json();
-        setError(errorData.detail || "Registration failed. Please try again.");
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (_) {}
+        setError(parseRegisterError(errorData));
       }
     } catch (err) {
       setError("Could not connect to the server. Please try again later.");

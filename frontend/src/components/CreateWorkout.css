@@ -1,0 +1,219 @@
+.create-workout {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  color: #222;
+  display: flex;
+  flex-direction: column;
+}
+
+.create-workout-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 24px;
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.create-workout-back {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  background: transparent;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.create-workout-back:hover {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+}
+
+.create-workout-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.create-workout-main {
+  flex: 1;
+  padding: 24px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.create-workout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.create-workout-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.create-workout-input,
+.create-workout-textarea {
+  font-size: 1rem;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.create-workout-input:focus,
+.create-workout-textarea:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.create-workout-textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.create-workout-exercises {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.create-workout-exercises-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.create-workout-section-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.create-workout-btn-secondary {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  background: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #333;
+  cursor: pointer;
+}
+
+.create-workout-btn-secondary:hover {
+  background: #f5f5f5;
+}
+
+.create-workout-exercise-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.create-workout-exercise-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.create-workout-exercise-index {
+  width: 24px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.create-workout-input--grow {
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+
+.create-workout-input--narrow {
+  width: 72px;
+  flex: 0 0 auto;
+}
+
+.create-workout-remove {
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid #c00;
+  color: #c00;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.create-workout-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.create-workout-remove:not(:disabled):hover {
+  background: #fff0f0;
+}
+
+.create-workout-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.create-workout-submit {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.create-workout-submit:hover {
+  background: #555;
+}
+
+@media (max-width: 600px) {
+  .create-workout-exercise-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .create-workout-input--narrow {
+    width: 100%;
+  }
+
+  .create-workout-remove {
+    margin-left: 0;
+  }
+}
