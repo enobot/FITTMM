@@ -22,3 +22,27 @@ class UserReturn(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+# Workout & Exercise schema
+class WorkoutPlan(BaseModel):
+    id: int
+    userid: int
+    name: str
+    description: str
+    workouts: list[Workout]
+
+class Workout(BaseModel):
+    id: int
+    name: str
+    workout_type: str
+    description: str
+    exercises: list[Exercise]
+
+class Exercise(BaseModel):
+    id: int
+    name: str
+    description: str
+    sets: int
+    reps: int
+    weight: float
+    duration: float
