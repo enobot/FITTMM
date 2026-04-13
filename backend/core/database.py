@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, Integer, Float, String, ForeignKey, Date
+from sqlalchemy import create_engine, Column, Integer, Float, String, ForeignKey, Date, relationship
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 load_dotenv()
@@ -12,7 +12,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, bind=engine)
 Base = declarative_base()
 
-# Tables
+# --------------- User Table ---------------
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -24,6 +24,61 @@ class User(Base):
     gender = Column(String(50))
     weight = Column(Float)
     height = Column(Float)
+
+    plan = relationship("WorkoutPlan", back_populates="users")
+
+# --------------- Workout Tables ---------------
+class WorkoutPlan(Base):
+    __tablename__ = 'workout_plans'
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    userid = Column(ForeignKey("users.id"), index=True)
+    name = Column(String(50), nullable=False)
+    description = Column(String(250))
+
+    workouts = relationship("Workout", back_populates="workout_plans")
+    
+class Workout(Base):
+    __tablename__ = 'workouts'
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    planid = Column(ForeignKey("workout_plans.id"), index=True)
+    name = Column(String(50), nullable=False)
+    workout_type = Column(String(50))
+    description = Column(String(250))
+
+    plan = relationship("WorkoutPlan", back_populates="workouts")
+    exercises = relationship("Exercise", secondary="workout_exercises", back_populates="workouts")
+
+class Exercise(Base):
+    __tablename__ = 'exercises'
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String(50), nullable=False)
+    description = Column(String(250))
+
+    workouts = relationship("Workout", secondary="workout_exercises", back_populates="exercises")
+
+# Join table to reuse exercises between workouts
+class WorkoutExercise(Base):
+    __tablename__ = 'workout_exercises'
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True) 
+    workoutid = Column(ForeignKey("workouts.id"), index=True)
+    exerciseid = Column(ForeignKey("exercises.id"), index=True)
+    sets = Column(Integer)
+    reps = Column(Integer)
+    weight = Column(Float, nullable=True)
+    duration = Column(Float)
+
+# Track user progress of workouts
+class UserProgress(Base):
+    __tablename__ = 'user_progress'
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True) 
+    userid = Column(ForeignKey("users.id"), index=True)
+    workoutid = Column(ForeignKey("workouts.id"), index=True)
+    exerciseid = Column(ForeignKey("exercises.id"), index=True)
+    sets_completed = Column(Integer)
+    reps_completed = Column(Integer)
+    weight = Column(Float)
+    duration = Column(Float)
+    date = Column(Date)
 
 def get_db():
     db = SessionLocal()
