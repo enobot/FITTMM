@@ -72,20 +72,13 @@ FLUSH PRIVILEGES;
 
 ## Create .env and set Database URL
 
-In backend folder create a .env file.
+In backend folder, FITTMM\backend
 
-Open and add:
+Run: python setup_env.py in terminal
 
-```
-DATABASE_URL=mysql+mysqlconnector://fitness_user:somepassword@localhost/fitness_app
+This will create your .env file with Database URL and Secret Key.
 
-Replace 'somepassword' with the password you created in the previous step
-
-
-SECRET_KEY= use command below to create a secret key and paste here
-
-python -c "import secrets; print(secrets.token_hex(32))"
-```
+!!! WARNING !!!  Only run if its your first time setting up database or you deleted you .env file.
 
 ## Run Alembic to create/update tables
 
@@ -126,6 +119,17 @@ npm start
 
 Frontend runs at:
 http://localhost:3000
+
+
+
+# How to Run Test Cases
+
+Once you have your .env setup, 
+
+run     pip install -r requirements_test.txt
+
+then run    pytest tests/ -v         in backend folder
+
 
 
 

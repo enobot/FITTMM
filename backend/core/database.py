@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, Integer, Float, String, ForeignKey, Date, relationship
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine, Column, Integer, Float, String, ForeignKey, Date
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 
 load_dotenv()
 
@@ -25,7 +25,7 @@ class User(Base):
     weight = Column(Float)
     height = Column(Float)
 
-    plan = relationship("WorkoutPlan", back_populates="users")
+    plan = relationship("WorkoutPlan")
 
 # --------------- Workout Tables ---------------
 class WorkoutPlan(Base):
@@ -35,7 +35,7 @@ class WorkoutPlan(Base):
     name = Column(String(50), nullable=False)
     description = Column(String(250))
 
-    workouts = relationship("Workout", back_populates="workout_plans")
+    workouts = relationship("Workout")
     
 class Workout(Base):
     __tablename__ = 'workouts'
@@ -46,7 +46,7 @@ class Workout(Base):
     description = Column(String(250))
 
     plan = relationship("WorkoutPlan", back_populates="workouts")
-    exercises = relationship("Exercise", secondary="workout_exercises", back_populates="workouts")
+    exercises = relationship("Exercise", secondary="workout_exercises")
 
 class Exercise(Base):
     __tablename__ = 'exercises'
@@ -54,7 +54,7 @@ class Exercise(Base):
     name = Column(String(50), nullable=False)
     description = Column(String(250))
 
-    workouts = relationship("Workout", secondary="workout_exercises", back_populates="exercises")
+    workout_list = relationship("Workout", secondary="workout_exercises", overlaps="exercises")
 
 # Join table to reuse exercises between workouts
 class WorkoutExercise(Base):
