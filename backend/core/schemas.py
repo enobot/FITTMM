@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date
 
+
 # Properties to receive via API on user creation
 class UserCreate(BaseModel):
     email: EmailStr
@@ -11,7 +12,8 @@ class UserCreate(BaseModel):
     gender: str
     weight: float
     height: int
-    
+
+
 # Properties to return
 class UserReturn(BaseModel):
     id: int
@@ -19,24 +21,11 @@ class UserReturn(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-# Workout & Exercise schema
-class WorkoutPlan(BaseModel):
-    id: int
-    userid: int
-    name: str
-    description: str
-    workouts: list[Workout]
-
-class Workout(BaseModel):
-    id: int
-    name: str
-    workout_type: str
-    description: str
-    exercises: list[Exercise]
 
 class Exercise(BaseModel):
     id: int
@@ -46,3 +35,20 @@ class Exercise(BaseModel):
     reps: int
     weight: float
     duration: float
+
+
+class Workout(BaseModel):
+    id: int
+    name: str
+    workout_type: str
+    description: str
+    exercises: list[Exercise]
+
+
+# Workout & Exercise schema
+class WorkoutPlan(BaseModel):
+    id: int
+    userid: int
+    name: str
+    description: str
+    workouts: list[Workout]

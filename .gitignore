@@ -4,3 +4,4 @@ __pycache__/
 node_modules/
 fitness.db
 .env
+test_fittmm.db
