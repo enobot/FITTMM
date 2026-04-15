@@ -26,8 +26,32 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+# ----- Workout Schemas -----
+class WorkoutPlanCreate(BaseModel):
+    name: str
+    description: str
+    workouts: list[WorkoutCreate]
 
-class Exercise(BaseModel):
+class WorkoutPlanReturn(BaseModel):
+    id: int
+    name: str
+    description: str
+    workouts: list[WorkoutReturn]
+
+class WorkoutCreate(BaseModel):
+    name: str
+    workout_type: str
+    description: str
+    exercises: list[ExerciseCreate]
+
+class WorkoutReturn(BaseModel):
+    id: int
+    name: str
+    workout_type: str
+    description: str
+    exercises: list[WorkoutExerciseReturn]
+
+class ExerciseCreate(BaseModel):
     id: int
     name: str
     description: str
@@ -36,19 +60,24 @@ class Exercise(BaseModel):
     weight: float
     duration: float
 
+class ExerciseReturn(BaseModel):
+    id: int
 
-class Workout(BaseModel):
+class WorkoutExerciseReturn(BaseModel):
     id: int
     name: str
-    workout_type: str
-    description: str
-    exercises: list[Exercise]
+    sets: int
+    reps: int
+    weight: float
+    duration: float
 
-
-# Workout & Exercise schema
-class WorkoutPlan(BaseModel):
+class UserProgressCreate(BaseModel):
     id: int
     userid: int
-    name: str
-    description: str
-    workouts: list[Workout]
+    workoutid: int
+    exerciseid: int
+    sets_completed: int
+    reps_completed: int
+    weight: float
+    duration: float
+    date: date
