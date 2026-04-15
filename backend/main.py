@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import bmi, auth
+from routers import bmi, auth, workout
 from core.defaultuser import register_default_user
 from contextlib import asynccontextmanager
 
@@ -27,6 +27,7 @@ app.add_middleware(
 
 app.include_router(bmi.router, prefix="/api")
 app.include_router(auth.router, prefix="/auth")
+app.include_router(workout.router, prefix="/workout")
 
 @app.get("/")
 def root():
