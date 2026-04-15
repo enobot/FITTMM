@@ -35,7 +35,8 @@ class WorkoutPlan(Base):
     name = Column(String(50), nullable=False)
     description = Column(String(250))
 
-    workouts = relationship("Workout")
+    users = relationship("User", back_populates="plan")
+    workouts = relationship("Workout", back_populates="plan")
     
 class Workout(Base):
     __tablename__ = 'workouts'
@@ -46,15 +47,13 @@ class Workout(Base):
     description = Column(String(250))
 
     plan = relationship("WorkoutPlan", back_populates="workouts")
-    exercises = relationship("Exercise", secondary="workout_exercises")
+    workout_exercises = relationship("WorkoutExercise", back_populates="workout")
 
 class Exercise(Base):
     __tablename__ = 'exercises'
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     description = Column(String(250))
-
-    workout_list = relationship("Workout", secondary="workout_exercises", overlaps="exercises")
 
 # Join table to reuse exercises between workouts
 class WorkoutExercise(Base):
@@ -66,6 +65,9 @@ class WorkoutExercise(Base):
     reps = Column(Integer)
     weight = Column(Float, nullable=True)
     duration = Column(Float)
+
+    workout = relationship("Workout", back_populates="workout_exercises")
+    exercise = relationship("Exercise")
 
 # Track user progress of workouts
 class UserProgress(Base):

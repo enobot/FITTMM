@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 import core.schemas as schemas
-from core.database import User, SessionLocal
+from core.database import User, Exercise, SessionLocal
 from core import security
 
 def get_user_by_email(db: Session, email: str):
@@ -20,3 +20,9 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+def get_exercise_by_id(db: Session, id: int):
+    return db.query(Exercise).filter(Exercise.id == id).first()
+
+def get_exercise_by_name(db: Session, name: str):
+    return db.query(Exercise).filter(Exercise.name == name).first()
