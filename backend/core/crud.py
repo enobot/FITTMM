@@ -23,3 +23,6 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 def get_exercise_by_id(db: Session, id: int):
     return db.query(Exercise).filter(Exercise.id == id).first()
+
+def get_exercise_by_name(db: Session, name: str):
+    return db.query(Exercise).filter(Exercise.name == name).first()
