@@ -25,10 +25,12 @@ import CreateAPlan from "./components/CreateAPlan";
 import ListOfExercises from "./components/ListOfExercises";
 import DoubleCheck from "./components/DoubleCheck";
 import DoneCreating from "./components/DoneCreating";
+import RecordWorkout from "./components/RecordWorkout";
 
 const router = createBrowserRouter([
   { path: "/", element: <Login /> },
   { path: "/homepage", element: <Homepage /> },
+  { path: "/recordWorkout", element: <RecordWorkout /> },
   { path: "/signup", element: <Signup /> },
   { path: "/plan/new", element: <CreateAPlan /> },
   { path: "/listOfExercises", element: <ListOfExercises /> },

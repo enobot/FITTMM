@@ -1,9 +1,10 @@
 .homepage {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f5f5f5;
   color: #222;
+  overflow: hidden;
 }
 
 .homepage--dark {
@@ -97,6 +98,32 @@
   border-color: #ccc;
 }
 
+.homepage-nav-theme-toggle {
+  border-width: 2px;
+}
+
+.homepage-nav-theme-toggle--light {
+  background-color: #fff7d6;
+  border-color: #f5c542;
+  color: #7a4f01;
+}
+
+.homepage-nav-theme-toggle--light:hover {
+  background-color: #ffefb3;
+  border-color: #efb830;
+}
+
+.homepage-nav-theme-toggle--dark {
+  background-color: #1f2937;
+  border-color: #60a5fa;
+  color: #dbeafe;
+}
+
+.homepage-nav-theme-toggle--dark:hover {
+  background-color: #111827;
+  border-color: #93c5fd;
+}
+
 .homepage--dark .homepage-nav-btn {
   border-color: #555;
   color: #e8e8e8;
@@ -122,6 +149,7 @@
   grid-template-rows: 1fr 1fr;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
   gap: 1px;
   background-color: #e0e0e0;
 }
@@ -138,7 +166,21 @@
   padding: 20px;
   background-color: #f5f5f5;
   min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   text-align: center;
+  box-sizing: border-box;
+  border: 1px solid #d7dee7;
+}
+
+.homepage-section--todays {
+  overflow: hidden;
+}
+
+.homepage-section--weekly {
+  align-items: stretch;
+  overflow: hidden;
 }
 
 .homepage--dark .homepage-section {
@@ -164,31 +206,73 @@
   background: #f7f9fb;
   padding: 10px;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
 }
 
 .homepage-weekly-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(52px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
 }
 
 .homepage-weekly-day {
   border: 2px solid #c8d5e2;
   background: #fff;
   width: 100%;
-  height: auto;
-  min-height: 110px;
-  aspect-ratio: 1 / 1.55;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
   padding: 8px 6px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  cursor: pointer;
+}
+
+.homepage-weekly-edit-tile {
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.homepage-weekly-edit-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(51, 65, 85, 0.58);
+}
+
+.homepage-weekly-edit-tile:hover {
+  background: #eef5ff;
+  border-color: #8fb8ef;
+}
+
+.homepage-weekly-edit-tile:hover .homepage-weekly-edit-label {
+  color: rgba(51, 65, 85, 0.88);
 }
 
 .homepage-weekly-day--current {
   border-color: #3b82f6;
   background: #eaf3ff;
+}
+
+.homepage-weekly-day--selected {
+  border-color: #2563eb;
+  background: #e7f0ff;
 }
 
 .homepage-weekly-day-title {
@@ -233,7 +317,8 @@
 @media (max-width: 900px) {
   .homepage-weekly-grid {
     gap: 6px;
-    grid-template-columns: repeat(7, minmax(44px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
   }
 
   .homepage-weekly-day {
@@ -272,8 +357,83 @@
   background: #1d3249;
 }
 
+.homepage--dark .homepage-weekly-day--selected {
+  border-color: #93c5fd;
+  background: #25415e;
+}
+
 .homepage--dark .homepage-weekly-day-title,
 .homepage--dark .homepage-weekly-item,
 .homepage--dark .homepage-weekly-rest {
   color: #dbe6f2;
+}
+
+.homepage--dark .homepage-weekly-edit-label {
+  color: rgba(219, 230, 242, 0.58);
+}
+
+.homepage--dark .homepage-weekly-edit-tile:hover {
+  background: #1d3249;
+  border-color: #60a5fa;
+}
+
+.homepage--dark .homepage-weekly-edit-tile:hover .homepage-weekly-edit-label {
+  color: rgba(219, 230, 242, 0.9);
+}
+
+/* Light, minimal scrollbars for dashboard panes */
+.homepage-section,
+.homepage-weekly,
+.homepage-weekly-day {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
+}
+
+.homepage-section::-webkit-scrollbar,
+.homepage-weekly::-webkit-scrollbar,
+.homepage-weekly-day::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.homepage-section::-webkit-scrollbar-track,
+.homepage-weekly::-webkit-scrollbar-track,
+.homepage-weekly-day::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.homepage-section::-webkit-scrollbar-thumb,
+.homepage-weekly::-webkit-scrollbar-thumb,
+.homepage-weekly-day::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.homepage-section::-webkit-scrollbar-thumb:hover,
+.homepage-weekly::-webkit-scrollbar-thumb:hover,
+.homepage-weekly-day::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.55);
+  background-clip: content-box;
+}
+
+.homepage--dark .homepage-section,
+.homepage--dark .homepage-weekly,
+.homepage--dark .homepage-weekly-day {
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.homepage--dark .homepage-section::-webkit-scrollbar-thumb,
+.homepage--dark .homepage-weekly::-webkit-scrollbar-thumb,
+.homepage--dark .homepage-weekly-day::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  background-clip: content-box;
+}
+
+.homepage--dark .homepage-section::-webkit-scrollbar-thumb:hover,
+.homepage--dark .homepage-weekly::-webkit-scrollbar-thumb:hover,
+.homepage--dark .homepage-weekly-day::-webkit-scrollbar-thumb:hover {
+  background: rgba(203, 213, 225, 0.45);
+  background-clip: content-box;
 }

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./Homepage.css";
 import TodaysBreakdown from "../components/TodaysBreakdown";
 import PlateCalculator from "../components/PlateCalculator";
+import MyProgress from "../components/MyProgress";
 
 const USER_NAME = "Tracy"; // TODO: get from auth/session
 const WEEK_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -24,6 +25,7 @@ function Homepage() {
     () => new Date().toLocaleDateString("en-US", { weekday: "long" }),
     []
   );
+  const [selectedBreakdownDay, setSelectedBreakdownDay] = useState(todayName);
 
   const weeklyPlan = useMemo(() => {
     try {
@@ -68,7 +70,9 @@ function Homepage() {
           </Link>
           <button
             type="button"
-            className="homepage-nav-btn"
+            className={`homepage-nav-btn homepage-nav-theme-toggle ${
+              isDark ? "homepage-nav-theme-toggle--dark" : "homepage-nav-theme-toggle--light"
+            }`}
             onClick={() => setIsDark((d) => !d)}
             title={isDark ? "Switch to light mode" : "Switch to dark mode"}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
@@ -99,22 +103,27 @@ function Homepage() {
       </nav>
 
       <main className="homepage-main">
-        <section className="homepage-section">
-          <TodaysBreakdown isDark={isDark} />
+        <section className="homepage-section homepage-section--todays">
+          <TodaysBreakdown isDark={isDark} selectedDay={selectedBreakdownDay} />
         </section>
         <section className="homepage-section">
-          <h2 className="homepage-section-title">My Progress</h2>
+          <MyProgress />
         </section>
-        <section className="homepage-section">
+        <section className="homepage-section homepage-section--weekly">
           <h2 className="homepage-section-title">Weekly</h2>
           <div className="homepage-weekly">
             <div className="homepage-weekly-grid">
               {weeklyPlan.map((slot) => (
-                <article
+                <button
+                  type="button"
                   key={slot.day}
                   className={`homepage-weekly-day ${
                     slot.day === todayName ? "homepage-weekly-day--current" : ""
+                  } ${
+                    slot.day === selectedBreakdownDay ? "homepage-weekly-day--selected" : ""
                   }`}
+                  onClick={() => setSelectedBreakdownDay(slot.day)}
+                  aria-label={`Show ${slot.day} workout in Today's Breakdown`}
                 >
                   <h3 className="homepage-weekly-day-title">{slot.short}</h3>
                   {!slot.hasAnySelections ? null : slot.exercises.length === 0 ? (
@@ -128,8 +137,16 @@ function Homepage() {
                       ))}
                     </ul>
                   )}
-                </article>
+                </button>
               ))}
+              <button
+                type="button"
+                className="homepage-weekly-day homepage-weekly-edit-tile"
+                onClick={() => navigate("/listOfExercises")}
+                aria-label="Edit weekly plan"
+              >
+                <span className="homepage-weekly-edit-label">Edit</span>
+              </button>
             </div>
           </div>
         </section>
