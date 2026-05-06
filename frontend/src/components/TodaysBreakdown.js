@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./TodaysBreakdown.css";
+import { setScopedItem, K } from "../utils/fittmmStorage";
+import { latestPayloadForWeekday } from "../api/workoutApi";
 
-// TODO: replace with API call to check if user has a workout plan
-function TodaysBreakdown({ isDark = false, selectedDay }) {
+function TodaysBreakdown({
+  selectedDay,
+  planSelections = {},
+  sessions = [],
+  planLoading = false,
+  sessionsLoading = false,
+}) {
   const navigate = useNavigate();
   const [hasWorkoutPlan, setHasWorkoutPlan] = useState(null);
   const [todayExercises, setTodayExercises] = useState([]);
@@ -11,13 +18,14 @@ function TodaysBreakdown({ isDark = false, selectedDay }) {
   const [isRestDay, setIsRestDay] = useState(false);
   const [displayDate, setDisplayDate] = useState(new Date());
 
+  const loading = planLoading || sessionsLoading;
+
   useEffect(() => {
     try {
       const today = new Date();
       const currentDayName = today.toLocaleDateString("en-US", { weekday: "long" });
       const dayName = selectedDay || currentDayName;
-      const raw = localStorage.getItem("fittmm_plan_day_selections");
-      const parsed = raw ? JSON.parse(raw) : {};
+      const parsed = planSelections || {};
       const hasAnySelections = Object.values(parsed).some(
         (items) => Array.isArray(items) && items.length > 0
       );
@@ -27,11 +35,9 @@ function TodaysBreakdown({ isDark = false, selectedDay }) {
       setHasWorkoutPlan(hasAnySelections && selectedExercises.length > 0);
       setTodayExercises(selectedExercises);
 
-      const dayLogsRaw = localStorage.getItem("fittmm_workout_day_logs");
-      const dayLogs = dayLogsRaw ? JSON.parse(dayLogsRaw) : {};
-      const dayLog = dayLogs?.[dayName];
+      const dayLog = latestPayloadForWeekday(sessions, dayName);
       const byExercise = {};
-      if (Array.isArray(dayLog?.exercises)) {
+      if (dayLog && Array.isArray(dayLog.exercises)) {
         dayLog.exercises.forEach((exercise) => {
           byExercise[exercise.name] = Array.isArray(exercise.sets) ? exercise.sets : [];
         });
@@ -63,7 +69,7 @@ function TodaysBreakdown({ isDark = false, selectedDay }) {
       setIsRestDay(false);
       setDisplayDate(new Date());
     }
-  }, [selectedDay]);
+  }, [selectedDay, planSelections, sessions]);
 
   const handleYes = () => {
     navigate("/plan/new");
@@ -75,7 +81,7 @@ function TodaysBreakdown({ isDark = false, selectedDay }) {
 
   const handleEdit = () => {
     if (selectedDay) {
-      localStorage.setItem("fittmm_selected_day", selectedDay);
+      setScopedItem(K.SELECTED_DAY, selectedDay);
     }
     navigate("/recordWorkout");
   };
@@ -86,7 +92,7 @@ function TodaysBreakdown({ isDark = false, selectedDay }) {
       ? loggedByExercise[exerciseName]
       : [{ set: null, reps: null, weight: null }];
 
-  if (hasWorkoutPlan === null) {
+  if (loading || hasWorkoutPlan === null) {
     return (
       <div className="todays-breakdown">
         <h2 className="todays-breakdown-title">Today's breakdown</h2>

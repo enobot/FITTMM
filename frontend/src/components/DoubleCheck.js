@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./DoubleCheck.css";
+import { buildPlanCreatePayload, savePlan } from "../api/workoutApi";
 
 const DAYS = [
   "Sunday",
@@ -14,24 +15,50 @@ const DAYS = [
 
 function DoubleCheck() {
   const navigate = useNavigate();
-  const [selectedByDay, setSelectedByDay] = useState(() => {
-    try {
-      const raw = localStorage.getItem("fittmm_plan_day_selections");
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
+  const location = useLocation();
+
+  const hasSelectionsPayload =
+    location.state != null &&
+    Object.prototype.hasOwnProperty.call(location.state, "selectedByDay");
+
+  const [selectedByDay, setSelectedByDay] = useState(() =>
+    hasSelectionsPayload ? location.state.selectedByDay : {}
+  );
+
+  const [saving, setSaving] = useState(false);
+
+  const flowSource = location.state?.source === "weekly-edit" ? "weekly-edit" : "new-plan";
+  const planMeta = location.state?.planMeta || {};
+
+  useEffect(() => {
+    if (!hasSelectionsPayload) {
+      navigate("/listOfExercises", {
+        replace: true,
+        state: { source: "new-plan" },
+      });
     }
-  });
+  }, [hasSelectionsPayload, navigate]);
 
   const orderedDays = useMemo(() => DAYS, []);
 
   const removeExerciseFromDay = (day, exercise) => {
     setSelectedByDay((prev) => {
       const remaining = (prev[day] || []).filter((name) => name !== exercise);
-      const next = { ...prev, [day]: remaining };
-      localStorage.setItem("fittmm_plan_day_selections", JSON.stringify(next));
-      return next;
+      return { ...prev, [day]: remaining };
     });
+  };
+
+  const commitPlanAndFinish = async () => {
+    setSaving(true);
+    try {
+      const payload = await buildPlanCreatePayload(selectedByDay, planMeta);
+      await savePlan(payload);
+      navigate("/doneCreating");
+    } catch (e) {
+      alert(e.message || "Could not save your plan.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -46,16 +73,21 @@ function DoubleCheck() {
           <button
             type="button"
             className="doublecheck-btn"
-            onClick={() => navigate("/listOfExercises")}
+            onClick={() =>
+              navigate("/listOfExercises", {
+                state: { selectedByDay, source: flowSource },
+              })
+            }
           >
             GO BACK
           </button>
           <button
             type="button"
             className="doublecheck-btn"
-            onClick={() => navigate("/doneCreating")}
+            onClick={commitPlanAndFinish}
+            disabled={saving}
           >
-            LOOKS GOOD!
+            {saving ? "Saving…" : "LOOKS GOOD!"}
           </button>
         </div>
       </div>

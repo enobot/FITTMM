@@ -93,18 +93,20 @@ function normalizeLogs(rawLogs) {
   return rows;
 }
 
-function MyProgress() {
+function MyProgress({ sessions = [], sessionsLoading = false }) {
   const [selectedRangeId, setSelectedRangeId] = useState(RANGE_OPTIONS[0].id);
 
   const normalizedRows = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("fittmm_workout_logs");
-      const parsed = raw ? JSON.parse(raw) : [];
-      return normalizeLogs(parsed);
-    } catch {
-      return [];
-    }
-  }, []);
+    if (!sessions?.length) return [];
+    const entries = sessions.map((s) => {
+      const p = s.payload && typeof s.payload === "object" ? s.payload : {};
+      return {
+        ...p,
+        date: p.date || s.logged_at,
+      };
+    });
+    return normalizeLogs(entries);
+  }, [sessions]);
 
   const selectedRange = RANGE_OPTIONS.find((item) => item.id === selectedRangeId) || RANGE_OPTIONS[0];
 
@@ -195,7 +197,9 @@ function MyProgress() {
       </header>
 
       <div className="my-progress-chart-wrap">
-        {!chartModel.hasData ? (
+        {sessionsLoading ? (
+          <p className="my-progress-empty">Loading progress…</p>
+        ) : !chartModel.hasData ? (
           <p className="my-progress-empty">No progress data available.</p>
         ) : (
           <div className="my-progress-chart">

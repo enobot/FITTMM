@@ -1,6 +1,22 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { API_BASE_URL } from "../apiConfig";
+import { applyUserSession } from "../utils/fittmmStorage";
+import { fetchWithTimeout } from "../api/workoutApi";
 import "./Login.css";
+
+const LOGIN_FETCH_MS = 30000;
+
+function parseLoginError(response, rawBody, fallback) {
+  if (!rawBody) return fallback;
+  try {
+    const data = JSON.parse(rawBody);
+    if (typeof data.detail === "string") return data.detail;
+    if (Array.isArray(data.detail))
+      return data.detail.map((x) => x.msg || JSON.stringify(x)).join(" ");
+  } catch (_) {}
+  return fallback;
+}
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -12,27 +28,73 @@ function Login() {
     e.preventDefault();
     setError("");
 
+    const emailNorm = email.trim().toLowerCase();
+    if (!emailNorm || !password) {
+      setError("Please enter email and password.");
+      return;
+    }
+
     const formData = new URLSearchParams();
-    formData.append("username", email); // FastAPI OAuth2 uses 'username'
+    formData.append("username", emailNorm); // FastAPI OAuth2 uses 'username'
     formData.append("password", password);
 
     try {
-      const response = await fetch("http://localhost:8000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData,
-      });
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: formData,
+        },
+        LOGIN_FETCH_MS
+      );
+
+      const raw = await response.text();
 
       if (response.ok) {
-        const data = await response.json();
-        // Save token to browser storage
+        let data;
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch (_) {
+          setError("Invalid response from server.");
+          return;
+        }
         localStorage.setItem("token", data.access_token);
+
+        try {
+          const meRes = await fetchWithTimeout(
+            `${API_BASE_URL}/auth/me`,
+            {
+              headers: { Authorization: `Bearer ${data.access_token}` },
+            },
+            LOGIN_FETCH_MS
+          );
+          if (meRes.ok) {
+            const meRaw = await meRes.text();
+            const me = meRaw ? JSON.parse(meRaw) : {};
+            applyUserSession(me);
+          }
+        } catch (_) {
+          /* profile sync can finish on homepage */
+        }
         navigate("/homepage");
-      } else {
-        setError("Incorrect email or password.");
+        return;
       }
+
+      const fallback =
+        response.status === 401
+          ? "Incorrect email or password."
+          : `Could not log in (${response.status}).`;
+      setError(parseLoginError(response, raw, fallback));
     } catch (err) {
-      setError("Could not connect to the server. Please try again later.");
+      const hint =
+        API_BASE_URL === ""
+          ? " Start the API on port 8000 and use npm start (proxy)."
+          : ` API URL: ${API_BASE_URL}.`;
+      setError(
+        (err?.message || "Could not connect to the server.") +
+          hint
+      );
     }
   };
 

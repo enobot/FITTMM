@@ -87,7 +87,17 @@ function CreateAPlan() {
   const goNext = () => {
     if (step === 0 && !canGoNextFromStep0) return;
     if (step === 0) {
-      navigate("/listOfExercises");
+      navigate("/listOfExercises", {
+        state: {
+          source: "new-plan",
+          planMeta: {
+            planName: planName.trim() || "My plan",
+            focus: focus.trim(),
+            notes: notes.trim(),
+            weeks,
+          },
+        },
+      });
       return;
     }
     if (step === 1 && !canGoNextFromStep1) return;
@@ -102,35 +112,6 @@ function CreateAPlan() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!planName.trim()) return;
-
-    const plan = {
-      id:
-        typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      planName: planName.trim(),
-      focus: focus.trim(),
-      weeks: weeks === "" ? null : Number(weeks),
-      notes: notes.trim(),
-      workoutDays: selectedDayIds,
-      exercises: exercises.map((r) => ({
-        name: r.name.trim(),
-        sets: r.sets === "" ? null : Number(r.sets),
-        reps: r.reps === "" ? null : Number(r.reps),
-        weight: r.weight === "" ? null : Number(r.weight),
-      })),
-      createdAt: new Date().toISOString(),
-    };
-
-    try {
-      const raw = localStorage.getItem("fittmm_plans");
-      const list = raw ? JSON.parse(raw) : [];
-      list.unshift(plan);
-      localStorage.setItem("fittmm_plans", JSON.stringify(list));
-    } catch {
-      /* ignore storage errors */
-    }
-
     navigate("/homepage");
   };
 

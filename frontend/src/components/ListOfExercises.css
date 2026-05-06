@@ -61,6 +61,21 @@
   font-size: 0.95rem;
 }
 
+.list-exercises-link-btn {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.list-exercises-link-btn:hover {
+  color: #4744c9;
+}
+
 .list-exercises-search {
   width: 100%;
   padding: 9px 12px;
@@ -132,4 +147,103 @@
 
 .list-exercises-dot--active {
   border-color: #4f94f0;
+}
+
+.list-exercises-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(38, 54, 69, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.list-exercises-modal {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+  border: 1px solid #c8d5e2;
+}
+
+.list-exercises-modal-title {
+  margin: 0 0 18px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #263645;
+}
+
+.list-exercises-modal-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3d5163;
+}
+
+.list-exercises-modal-input,
+.list-exercises-modal-select {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid #bccad7;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.list-exercises-modal-input:focus,
+.list-exercises-modal-select:focus {
+  outline: 2px solid #5f5ce6;
+  outline-offset: 1px;
+}
+
+.list-exercises-modal-error {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  color: #b91c1c;
+}
+
+.list-exercises-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.list-exercises-modal-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.list-exercises-modal-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.list-exercises-modal-btn--muted {
+  background: #eef3f7;
+  border-color: #bccad7;
+  color: #374151;
+}
+
+.list-exercises-modal-btn--muted:hover:not(:disabled) {
+  background: #e3eaf1;
+}
+
+.list-exercises-modal-btn--primary {
+  background: #5f5ce6;
+  color: #fff;
+}
+
+.list-exercises-modal-btn--primary:hover:not(:disabled) {
+  background: #4f4bd4;
 }

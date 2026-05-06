@@ -1,5 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  fetchPlan,
+  fetchSessions,
+  selectionsFromApiPlan,
+  latestPayloadForWeekday,
+  postSession,
+} from "../api/workoutApi";
+import { getScopedItem, K, clearUserSession } from "../utils/fittmmStorage";
 import "./RecordWorkout.css";
 
 const DEFAULT_EXERCISES = [
@@ -179,8 +187,64 @@ function ExerciseCard({ exercise, value, onChange }) {
   );
 }
 
+function buildEntriesFromExercises(exercisesList, latestDayPayload) {
+  let savedByName = {};
+  if (latestDayPayload && Array.isArray(latestDayPayload.exercises)) {
+    savedByName = latestDayPayload.exercises.reduce((acc, exercise) => {
+      acc[exercise.name] = exercise;
+      return acc;
+    }, {});
+  }
+
+  const entries = {};
+  exercisesList.forEach((exercise) => {
+    const saved = savedByName[exercise.name];
+    const savedSets = Array.isArray(saved?.sets)
+      ? saved.sets.map((row, idx) => ({
+          id: `${exercise.id}-saved-${idx}`,
+          set: Number(row.set) || idx + 1,
+          reps: Number(row.reps) || 0,
+          weightLbs: Number(row.weightLbs ?? row.weight) || 0,
+        }))
+      : [];
+
+    entries[exercise.id] = {
+      sets: savedSets,
+      rating: typeof saved?.rating === "number" ? saved.rating : exercise.stars || 0,
+    };
+  });
+  return entries;
+}
+
 function RecordWorkout() {
   const navigate = useNavigate();
+
+  const [planSelections, setPlanSelections] = useState({});
+  const [sessions, setSessions] = useState([]);
+  const [bootstrapDone, setBootstrapDone] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const [plan, sess] = await Promise.all([fetchPlan(), fetchSessions()]);
+        if (cancelled) return;
+        setPlanSelections(plan ? selectionsFromApiPlan(plan) : {});
+        setSessions(Array.isArray(sess) ? sess : []);
+      } catch {
+        if (!cancelled) {
+          setPlanSelections({});
+          setSessions([]);
+        }
+      } finally {
+        if (!cancelled) setBootstrapDone(true);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const dateLabel = useMemo(() => {
     return new Date().toLocaleDateString("en-US", {
@@ -192,62 +256,37 @@ function RecordWorkout() {
   }, []);
 
   const selectedDay = useMemo(() => {
-    const stored = localStorage.getItem("fittmm_selected_day");
+    const stored = getScopedItem(K.SELECTED_DAY);
     return stored || new Date().toLocaleDateString("en-US", { weekday: "long" });
   }, []);
 
   const exercises = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("fittmm_plan_day_selections");
-      const parsed = raw ? JSON.parse(raw) : {};
-      const names = Array.isArray(parsed[selectedDay]) ? parsed[selectedDay] : [];
-      if (names.length === 0) return DEFAULT_EXERCISES;
-      return names.map((name, i) => ({
-        id: `${name}-${i}`,
-        name,
-        stars: 3,
-        thumbLabel: name,
-      }));
-    } catch {
-      return DEFAULT_EXERCISES;
-    }
-  }, [selectedDay]);
+    const names = Array.isArray(planSelections[selectedDay]) ? planSelections[selectedDay] : [];
+    if (names.length === 0) return DEFAULT_EXERCISES;
+    return names.map((name, i) => ({
+      id: `${name}-${i}`,
+      name,
+      stars: 3,
+      thumbLabel: name,
+    }));
+  }, [planSelections, selectedDay]);
 
-  const [exerciseEntries, setExerciseEntries] = useState(() => {
-    let savedByName = {};
-    try {
-      const dayLogsRaw = localStorage.getItem("fittmm_workout_day_logs");
-      const dayLogs = dayLogsRaw ? JSON.parse(dayLogsRaw) : {};
-      const savedExercises = Array.isArray(dayLogs?.[selectedDay]?.exercises)
-        ? dayLogs[selectedDay].exercises
-        : [];
-      savedByName = savedExercises.reduce((acc, exercise) => {
-        acc[exercise.name] = exercise;
-        return acc;
-      }, {});
-    } catch {
-      savedByName = {};
-    }
+  const latestDayPayload = useMemo(
+    () => latestPayloadForWeekday(sessions, selectedDay),
+    [sessions, selectedDay]
+  );
 
-    const entries = {};
-    exercises.forEach((exercise) => {
-      const saved = savedByName[exercise.name];
-      const savedSets = Array.isArray(saved?.sets)
-        ? saved.sets.map((row, idx) => ({
-            id: `${exercise.id}-saved-${idx}`,
-            set: Number(row.set) || idx + 1,
-            reps: Number(row.reps) || 0,
-            weightLbs: Number(row.weightLbs ?? row.weight) || 0,
-          }))
-        : [];
+  const exerciseNamesKey = useMemo(() => {
+    const names = Array.isArray(planSelections[selectedDay]) ? planSelections[selectedDay] : [];
+    return names.join("\u0000");
+  }, [planSelections, selectedDay]);
 
-      entries[exercise.id] = {
-        sets: savedSets,
-        rating: typeof saved?.rating === "number" ? saved.rating : exercise.stars || 0,
-      };
-    });
-    return entries;
-  });
+  const [exerciseEntries, setExerciseEntries] = useState({});
+
+  useEffect(() => {
+    if (!bootstrapDone) return;
+    setExerciseEntries(buildEntriesFromExercises(exercises, latestDayPayload));
+  }, [bootstrapDone, exerciseNamesKey, exercises, latestDayPayload]);
 
   const updateExerciseEntry = (exerciseId, nextValue) => {
     setExerciseEntries((prev) => ({
@@ -256,7 +295,9 @@ function RecordWorkout() {
     }));
   };
 
-  const saveWorkout = () => {
+  const [saving, setSaving] = useState(false);
+
+  const saveWorkout = async () => {
     const dateIso = new Date().toISOString();
     const dayRecord = {
       day: selectedDay,
@@ -283,26 +324,15 @@ function RecordWorkout() {
       0
     );
 
+    setSaving(true);
     try {
-      const logsRaw = localStorage.getItem("fittmm_workout_logs");
-      const existingLogs = logsRaw ? JSON.parse(logsRaw) : [];
-      const nonMatchingLogs = Array.isArray(existingLogs)
-        ? existingLogs.filter((entry) => entry?.day !== selectedDay)
-        : [];
-      localStorage.setItem(
-        "fittmm_workout_logs",
-        JSON.stringify([...nonMatchingLogs, dayRecord])
-      );
-
-      const dayLogsRaw = localStorage.getItem("fittmm_workout_day_logs");
-      const dayLogs = dayLogsRaw ? JSON.parse(dayLogsRaw) : {};
-      dayLogs[selectedDay] = dayRecord;
-      localStorage.setItem("fittmm_workout_day_logs", JSON.stringify(dayLogs));
-    } catch {
-      // no-op for localStorage parse/set failure
+      await postSession(dayRecord);
+      navigate("/homepage");
+    } catch (err) {
+      alert(err.message || "Could not save workout.");
+    } finally {
+      setSaving(false);
     }
-
-    navigate("/homepage");
   };
 
   return (
@@ -327,6 +357,7 @@ function RecordWorkout() {
             className="record-workout-nav-link"
             onClick={() => {
               localStorage.removeItem("token");
+              clearUserSession();
               navigate("/");
             }}
           >
@@ -349,8 +380,13 @@ function RecordWorkout() {
       </div>
 
       <div className="record-workout-done-wrap">
-        <button type="button" className="record-workout-done" onClick={saveWorkout}>
-          Done!
+        <button
+          type="button"
+          className="record-workout-done"
+          onClick={saveWorkout}
+          disabled={saving || !bootstrapDone}
+        >
+          {saving ? "Saving…" : "Done!"}
         </button>
       </div>
     </div>
