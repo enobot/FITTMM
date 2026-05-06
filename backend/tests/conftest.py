@@ -50,7 +50,7 @@ def client(reset_db):
     app.dependency_overrides[get_db] = override_get_db
 
     # Patch the startup function so it doesn't attempt a MySQL connection
-    with patch("core.defaultuser.register_default_user"):
+    with patch("core.defaultentries.register_default_user"):
         with TestClient(app) as c:
             yield c
 

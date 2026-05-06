@@ -41,7 +41,7 @@ venv\Scripts\activate
 
 ## Install Requirements
 
-pip install -r requirements.txt
+pip install -r requirements.txt from backend directory.
 
 ## MySQL Local Database Setup
 
@@ -129,6 +129,9 @@ Once you have your .env setup,
 run     pip install -r requirements_test.txt
 
 then run    pytest tests/ -v         in backend folder
+
+then run    npm install react-router-dom@6 --legacy-peer-deps
+and         npm test -- --watchAll=false        in frontend folder
 
 
 

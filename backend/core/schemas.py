@@ -1,6 +1,8 @@
+from __future__ import annotations
 from pydantic import BaseModel, EmailStr
 from datetime import date
 from typing import Optional
+
 
 # Properties to receive via API on user creation
 class UserCreate(BaseModel):
@@ -26,11 +28,13 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 # ----- Workout Schemas -----
 class WorkoutPlanCreate(BaseModel):
     name: str
     description: str
     workouts: list[WorkoutCreate]
+
 
 class WorkoutPlanReturn(BaseModel):
     id: int
@@ -40,28 +44,33 @@ class WorkoutPlanReturn(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class WorkoutCreate(BaseModel):
     name: str
     description: str
     workout_exercises: list[WorkoutExerciseCreate]
+
 
 class WorkoutReturn(BaseModel):
     id: int
     name: str
     description: str
     workout_exercises: list[WorkoutExerciseReturn]
-    
+
     model_config = {"from_attributes": True}
+
 
 class WorkoutExerciseCreate(BaseModel):
     exerciseid: int
     day_of_week: int
+
 
 class WorkoutExerciseUpdate(BaseModel):
     sets: int
     reps: int
     weight: float
     duration: float
+
 
 class WorkoutExerciseReturn(BaseModel):
     id: int
@@ -72,21 +81,24 @@ class WorkoutExerciseReturn(BaseModel):
     weight: Optional[float]
     duration: Optional[float]
     day_of_week: int
-    
+
     model_config = {"from_attributes": True}
+
 
 class ExerciseCreate(BaseModel):
     name: str
     description: str
     image: str
 
+
 class ExerciseReturn(BaseModel):
     id: int
     name: str
     description: str
     image: str
-    
+
     model_config = {"from_attributes": True}
+
 
 class UserProgressCreate(BaseModel):
     id: int
@@ -100,6 +112,7 @@ class UserProgressCreate(BaseModel):
     date_start: date
     date_end: date
 
+
 class UserProgressReturn(BaseModel):
     id: int
     userid: int
@@ -111,5 +124,5 @@ class UserProgressReturn(BaseModel):
     duration: float
     date_start: date
     date_end: date
-    
+
     model_config = {"from_attributes": True}
