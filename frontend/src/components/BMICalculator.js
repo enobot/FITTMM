@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_BASE_URL } from "../apiConfig";
 
 function BMICalculator() {
     const [weight, setWeight] = useState("");
@@ -6,7 +7,7 @@ function BMICalculator() {
     const [bmi, setBmi] = useState(null);
 
     const calculateBMI = async () => {
-        const response = await fetch("http://127.0.0.1:8000/api/calculate-bmi", {
+        const response = await fetch(`${API_BASE_URL}/api/calculate-bmi`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
