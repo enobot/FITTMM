@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date
-
+from typing import Optional
 
 # Properties to receive via API on user creation
 class UserCreate(BaseModel):
@@ -38,38 +38,55 @@ class WorkoutPlanReturn(BaseModel):
     description: str
     workouts: list[WorkoutReturn]
 
+    model_config = {"from_attributes": True}
+
 class WorkoutCreate(BaseModel):
     name: str
-    workout_type: str
     description: str
-    exercises: list[ExerciseCreate]
+    workout_exercises: list[WorkoutExerciseCreate]
 
 class WorkoutReturn(BaseModel):
     id: int
     name: str
-    workout_type: str
     description: str
-    exercises: list[WorkoutExerciseReturn]
+    workout_exercises: list[WorkoutExerciseReturn]
+    
+    model_config = {"from_attributes": True}
 
-class ExerciseCreate(BaseModel):
-    id: int
-    name: str
-    description: str
+class WorkoutExerciseCreate(BaseModel):
+    exerciseid: int
+    day_of_week: int
+
+class WorkoutExerciseUpdate(BaseModel):
     sets: int
     reps: int
     weight: float
     duration: float
-
-class ExerciseReturn(BaseModel):
-    id: int
 
 class WorkoutExerciseReturn(BaseModel):
     id: int
+    workoutid: int
+    exerciseid: int
+    sets: Optional[int]
+    reps: Optional[int]
+    weight: Optional[float]
+    duration: Optional[float]
+    day_of_week: int
+    
+    model_config = {"from_attributes": True}
+
+class ExerciseCreate(BaseModel):
     name: str
-    sets: int
-    reps: int
-    weight: float
-    duration: float
+    description: str
+    image: str
+
+class ExerciseReturn(BaseModel):
+    id: int
+    name: str
+    description: str
+    image: str
+    
+    model_config = {"from_attributes": True}
 
 class UserProgressCreate(BaseModel):
     id: int
@@ -80,4 +97,19 @@ class UserProgressCreate(BaseModel):
     reps_completed: int
     weight: float
     duration: float
-    date: date
+    date_start: date
+    date_end: date
+
+class UserProgressReturn(BaseModel):
+    id: int
+    userid: int
+    workoutid: int
+    exerciseid: int
+    sets_completed: int
+    reps_completed: int
+    weight: float
+    duration: float
+    date_start: date
+    date_end: date
+    
+    model_config = {"from_attributes": True}

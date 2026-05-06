@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import bmi, auth, workout
-from core.defaultuser import register_default_user
+from core.defaultentries import register_default_user
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
