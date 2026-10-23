@@ -1,10 +1,14 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import core.schemas as schemas
-from core.database import User, Exercise, SessionLocal
+from core.database import User, Exercise
 from core import security
 
 def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
+    if not email:
+        return None
+    normalized = email.strip().lower()
+    return db.query(User).filter(User.email == normalized).first()
 
 def authenticate_user(db: Session, email: str, password: str):
     user = get_user_by_email(db, email)
@@ -25,4 +29,13 @@ def get_exercise_by_id(db: Session, id: int):
     return db.query(Exercise).filter(Exercise.id == id).first()
 
 def get_exercise_by_name(db: Session, name: str):
-    return db.query(Exercise).filter(Exercise.name == name).first()
+    if not name:
+        return None
+    n = name.strip()
+    if not n:
+        return None
+    return (
+        db.query(Exercise)
+        .filter(func.lower(Exercise.name) == func.lower(n))
+        .first()
+    )
