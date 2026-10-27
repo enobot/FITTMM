@@ -32,6 +32,7 @@ class HomeActivity : AppCompatActivity() {
     private var selectedDay = Week.today()
     private var currentPlan: WorkoutPlan? = null
     private var metric = false
+    private var networkRetries = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,23 +83,38 @@ class HomeActivity : AppCompatActivity() {
         load()
     }
 
+    /** First name from the profile, else from the sign-in account, so it works offline too. */
+    private fun greet(profileName: String?) {
+        val fromAccount = repo.auth().displayName().trim().substringBefore(" ")
+        val fromEmail = repo.currentEmail().substringBefore("@").substringBefore(".")
+            .replaceFirstChar { it.uppercase() }
+        val name = profileName?.trim().orEmpty().ifEmpty { fromAccount }.ifEmpty { fromEmail }
+        binding.greetingText.text = if (name.isEmpty()) "Hi" else "Hi, $name"
+    }
+
+    /** Right after the phone wakes up the network may not be ready; try again shortly. */
+    private fun retryIfOffline(message: String): Boolean {
+        if (!message.startsWith("Can't reach") || networkRetries >= 3) return false
+        networkRetries += 1
+        binding.root.postDelayed({ if (!isDestroyed) load() }, 3000L)
+        return true
+    }
+
     private fun load() {
         binding.todayBody.text = "Loading..."
+        greet(null)
         repo.loadProfile(object : FittmmRepository.ValueCallback<UserProfile> {
             override fun onSuccess(value: UserProfile?) {
                 if (isDestroyed) return
-                val name = value?.fname?.trim().orEmpty().ifEmpty {
-                    repo.currentEmail().substringBefore("@").ifEmpty { "there" }
-                }
-                binding.greetingText.text = "Hi, $name"
+                networkRetries = 0
+                greet(value?.fname)
                 metric = value?.metric() == true
                 loadVolume()
             }
 
             override fun onError(message: String) {
                 if (isDestroyed) return
-                binding.greetingText.text = "Hi there"
-                loadVolume()
+                if (!retryIfOffline(message)) loadVolume()
             }
         })
         repo.loadPlan(object : FittmmRepository.ValueCallback<WorkoutPlan> {
@@ -112,7 +128,8 @@ class HomeActivity : AppCompatActivity() {
             override fun onError(message: String) {
                 if (isDestroyed) return
                 currentPlan = null
-                binding.todayBody.text = message
+                binding.todayBody.text =
+                    if (message.startsWith("Can't reach") && networkRetries < 3) "Connecting..." else message
                 bindWeek()
             }
         })
