@@ -36,14 +36,35 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     fname = Column(String(50), nullable=False)
     lname = Column(String(50), nullable=False)
-    email = Column(String(50), unique=True, index=True, nullable=False)
-    password_hash = Column(String(100), nullable=False)
-    date_of_birth = Column(Date, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    # Null for accounts that sign in through Firebase (Google, Apple, email link)
+    password_hash = Column(String(100), nullable=True)
+    firebase_uid = Column(String(128), unique=True, index=True, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
     gender = Column(String(50))
-    weight = Column(Float)
-    height = Column(Float)
+    weight = Column(Float)          # pounds
+    height = Column(Float)          # inches
+    goal_weight = Column(Float)     # pounds
+    unit_system = Column(String(10), nullable=False, default="imperial")  # "imperial" | "metric"
 
     plan = relationship("WorkoutPlan")
+    weights = relationship(
+        "WeightEntry", back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+# Body weight history, newest last. users.weight mirrors the latest entry.
+class WeightEntry(Base):
+    __tablename__ = "weight_entries"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    userid = Column(ForeignKey("users.id"), index=True, nullable=False)
+    weight = Column(Float, nullable=False)      # pounds
+    recorded_on = Column(Date, nullable=False)
+    created_at = Column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    user = relationship("User", back_populates="weights")
 
 # --------------- Workout Tables ---------------
 class WorkoutPlan(Base):
@@ -75,10 +96,22 @@ class Exercise(Base):
     __tablename__ = "exercises"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     userid = Column(Integer, ForeignKey("users.id"), nullable=True)         # Null for global exercises
-    name = Column(String(50), nullable=False)
+    name = Column(String(100), nullable=False)
     description = Column(String(250))
     image = Column(String(500))
     body_part = Column(String(50), nullable=True)
+
+    # Library fields, filled for exercises seeded from data/exercise_library.json
+    slug = Column(String(100), unique=True, index=True, nullable=True)
+    category = Column(String(50))
+    equipment = Column(String(50))
+    level = Column(String(20))
+    force = Column(String(20))
+    mechanic = Column(String(20))
+    primary_muscles = Column(JSON)
+    secondary_muscles = Column(JSON)
+    instructions = Column(JSON)
+    images = Column(JSON)           # paths relative to EXERCISE_IMAGE_BASE_URL, or full URLs
 
 
 # Join table to reuse exercises between workouts
@@ -110,6 +143,15 @@ class WorkoutSession(Base):
         default=lambda: datetime.now(timezone.utc),
     )
     payload = Column(JSON, nullable=False)
+
+
+# Cached YouTube search results so repeat lookups don't spend API quota
+class VideoCache(Base):
+    __tablename__ = "video_cache"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    query = Column(String(200), unique=True, index=True, nullable=False)
+    fetched_at = Column(DateTime, nullable=False)
+    results = Column(JSON, nullable=False)
 
 
 class UserProgress(Base):

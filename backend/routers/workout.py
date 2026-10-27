@@ -1,7 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import date, datetime, timedelta
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 import core.crud as crud
 import core.schemas as schemas
+from core import exercise_library, youtube
 from core.database import (
     get_db,
     User,
@@ -13,8 +18,39 @@ from core.database import (
     UserProgress,
 )
 from core.security import get_current_user
+from core.volume import compute_volume
 
 router = APIRouter()
+
+
+def exercise_out(ex: Exercise) -> schemas.ExerciseReturn:
+    images = exercise_library.exercise_images(ex)
+    return schemas.ExerciseReturn(
+        id=ex.id,
+        name=ex.name,
+        description=ex.description or "",
+        image=images[0] if images else "",
+        body_part=ex.body_part,
+        userid=ex.userid,
+        slug=ex.slug,
+        category=ex.category,
+        equipment=ex.equipment,
+        level=ex.level,
+        primary_muscles=ex.primary_muscles or [],
+        images=images,
+    )
+
+
+def visible_exercise(db: Session, exercise_id: int, user_id: int) -> Exercise:
+    ex = (
+        db.query(Exercise)
+        .filter(Exercise.id == exercise_id)
+        .filter((Exercise.userid == None) | (Exercise.userid == user_id))  # noqa: E711
+        .first()
+    )
+    if not ex:
+        raise HTTPException(status_code=404, detail="Exercise not found")
+    return ex
 
 
 def serialize_workout_plan(plan: WorkoutPlan) -> schemas.WorkoutPlanReturn:
@@ -224,14 +260,19 @@ def create_exercise(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if crud.get_exercise_by_name(db, exercise.name):
+    name = exercise.name.strip()
+    if not name or len(name) > 100:
+        raise HTTPException(status_code=400, detail="Exercise name must be 1 to 100 characters")
+    # Only the library and this user's own exercises can clash; other people's
+    # custom exercises are invisible to this user.
+    if crud.get_exercise_by_name(db, name, user_id=current_user.id):
         raise HTTPException(
             status_code=400,
             detail="Exercise with name '" + exercise.name + "' already exists",
         )
 
     db_exercise = Exercise(
-        name=exercise.name.strip(),
+        name=name,
         userid=current_user.id,
         description=exercise.description or "",
         image=exercise.image or "",
@@ -242,31 +283,74 @@ def create_exercise(
     db.commit()
     db.refresh(db_exercise)
 
-    return db_exercise
+    return exercise_out(db_exercise)
 
 
 @router.get("/exercises", response_model=list[schemas.ExerciseReturn])
-def get_exercises(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    exercises = (
-        db.query(Exercise)
-        .filter((Exercise.userid == None) | (Exercise.userid == current_user.id))
-        .all()
+def get_exercises(
+    q: Optional[str] = None,
+    body_part: Optional[str] = None,
+    equipment: Optional[str] = None,
+    level: Optional[str] = None,
+    category: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """The library plus this user's custom exercises. Filters are optional;
+    with none, everything comes back (the web app filters client-side)."""
+    query = db.query(Exercise).filter(
+        (Exercise.userid == None) | (Exercise.userid == current_user.id)  # noqa: E711
+    )
+    if q and q.strip():
+        query = query.filter(func.lower(Exercise.name).contains(q.strip().lower()))
+    if body_part:
+        query = query.filter(Exercise.body_part == body_part.strip().lower())
+    if equipment:
+        query = query.filter(Exercise.equipment == equipment.strip().lower())
+    if level:
+        query = query.filter(Exercise.level == level.strip().lower())
+    if category:
+        query = query.filter(Exercise.category == category.strip().lower())
+
+    exercises = query.order_by(func.lower(Exercise.name)).all()
+    return [exercise_out(exercise) for exercise in exercises]
+
+
+@router.get("/exercises/{exercise_id}", response_model=schemas.ExerciseDetail)
+def get_exercise(
+    exercise_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ex = visible_exercise(db, exercise_id, current_user.id)
+    return schemas.ExerciseDetail(
+        **exercise_out(ex).model_dump(),
+        force=ex.force,
+        mechanic=ex.mechanic,
+        secondary_muscles=ex.secondary_muscles or [],
+        instructions=ex.instructions or [],
+        tips=exercise_library.form_tips(ex),
+        video_query=youtube.tutorial_query(ex.name),
     )
 
-    exercises_list = []
-    for exercise in exercises:
-        exercises_list.append(
-            schemas.ExerciseReturn(
-                id=exercise.id,
-                name=exercise.name,
-                description=exercise.description or "",
-                image=exercise.image or "",
-                body_part=exercise.body_part,
-                userid=exercise.userid,
-            )
-        )
 
-    return exercises_list
+@router.get("/exercises/{exercise_id}/videos", response_model=schemas.VideoSearchOut)
+def get_exercise_videos(
+    exercise_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ex = visible_exercise(db, exercise_id, current_user.id)
+    return youtube.search_videos(db, youtube.tutorial_query(ex.name), current_user.id)
+
+
+@router.get("/videos", response_model=schemas.VideoSearchOut)
+def search_videos(
+    q: str = Query(..., min_length=2, max_length=150),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return youtube.search_videos(db, q, current_user.id)
 
 
 @router.post("/sessions", response_model=schemas.WorkoutSessionOut)
@@ -295,3 +379,35 @@ def list_sessions(
         .all()
     )
     return rows
+
+
+@router.get("/volume", response_model=schemas.VolumeSummary)
+def volume_summary(
+    days: int = Query(30, ge=1, le=365),
+    today: Optional[date] = None,
+    tz_offset: int = Query(0, ge=-840, le=840),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Volume = reps x weight (lb). Pass the client's local `today` and
+    `tz_offset` (JavaScript getTimezoneOffset minutes) so days line up."""
+    today = today or (datetime.now(timezone.utc) - timedelta(minutes=tz_offset)).date()
+    # Cover the requested range and last week (for the week-over-week numbers)
+    since = min(today - timedelta(days=days - 1), today - timedelta(days=14)) - timedelta(days=2)
+    rows = (
+        db.query(WorkoutSession.payload, WorkoutSession.logged_at)
+        .filter(WorkoutSession.userid == current_user.id,
+                WorkoutSession.logged_at >= datetime.combine(since, datetime.min.time()))
+        .all()
+    )
+
+    parts = {}
+
+    def body_part_of(name: str):
+        key = name.lower()
+        if key not in parts:
+            ex = exercise_library.find_visible_exercise(db, name, current_user.id)
+            parts[key] = ex.body_part if ex else None
+        return parts[key]
+
+    return compute_volume(rows, body_part_of, days, today, tz_offset)
