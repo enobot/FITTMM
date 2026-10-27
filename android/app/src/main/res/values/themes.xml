@@ -8,8 +8,36 @@
         <item name="colorOnSurface">@color/text</item>
         <item name="colorOnSurfaceVariant">@color/textSecondary</item>
         <item name="colorOutline">@color/textSecondary</item>
+        <item name="colorError">@color/error</item>
         <item name="android:statusBarColor">@color/primaryDark</item>
         <item name="android:navigationBarColor">@color/background</item>
         <item name="android:windowBackground">@color/background</item>
+    </style>
+
+    <!-- Condensed headings stand in for the website's Big Shoulders Display -->
+    <style name="TextAppearance.FITTMM.Display" parent="">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">36sp</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+
+    <style name="TextAppearance.FITTMM.Section" parent="">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+
+    <style name="TextAppearance.FITTMM.Number" parent="">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+
+    <style name="TextAppearance.FITTMM.Label" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/textSecondary</item>
     </style>
 </resources>

@@ -11,4 +11,5 @@ class DraftViewModel : ViewModel() {
     var query = ""
     var filter = "all"
     val custom = mutableListOf<Exercise>()
+    val library = mutableListOf<Exercise>()
 }

@@ -32,6 +32,27 @@
             android:name=".ui.home.HomeActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.auth.VerifyEmailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.auth.ForgotPasswordActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.library.ExerciseLibraryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.library.ExerciseDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.volume.VolumeActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.plan.PlanActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

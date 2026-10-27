@@ -1,6 +1,6 @@
 package com.fittmm.app.data;
 
-/** Reads numbers stored by Cloud Firestore, which may come back as Long or Double. */
+/** Reads JSON numbers, which may come back as Integer, Long or Double. */
 public final class Numbers {
     private Numbers() {}
 

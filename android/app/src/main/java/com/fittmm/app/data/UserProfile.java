@@ -1,10 +1,8 @@
 package com.fittmm.app.data;
 
-import com.google.firebase.firestore.DocumentSnapshot;
+import androidx.annotation.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/** The signed-in user's profile. Weight is in pounds and height in inches, as the API stores them. */
 public class UserProfile {
     public String fname = "";
     public String lname = "";
@@ -14,34 +12,15 @@ public class UserProfile {
     public double weight;
     public double height;
 
-    public Map<String, Object> toMap() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("fname", fname);
-        map.put("lname", lname);
-        map.put("email", email);
-        map.put("dateOfBirth", dateOfBirth);
-        map.put("gender", gender == null ? "" : gender);
-        map.put("weight", weight);
-        map.put("height", height);
-        return map;
-    }
+    @Nullable public Integer age;
+    @Nullable public Double previousWeight;
+    @Nullable public Double goalWeight;
+    public String unitSystem = "imperial";
+    @Nullable public Double bmi;
+    public String bmiCategory = "";
+    public boolean profileComplete;
 
-    public static UserProfile from(DocumentSnapshot snap) {
-        if (snap == null || !snap.exists()) {
-            return null;
-        }
-        UserProfile profile = new UserProfile();
-        profile.fname = text(snap.getString("fname"));
-        profile.lname = text(snap.getString("lname"));
-        profile.email = text(snap.getString("email"));
-        profile.dateOfBirth = text(snap.getString("dateOfBirth"));
-        profile.gender = text(snap.getString("gender"));
-        profile.weight = Numbers.asDouble(snap.get("weight"), 0);
-        profile.height = Numbers.asDouble(snap.get("height"), 0);
-        return profile;
-    }
-
-    private static String text(String value) {
-        return value == null ? "" : value;
+    public boolean metric() {
+        return "metric".equals(unitSystem);
     }
 }

@@ -3,29 +3,35 @@ package com.fittmm.app.ui.home
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
-import com.fittmm.app.FittmmApp
 import com.fittmm.app.data.FittmmRepository
 import com.fittmm.app.data.Nav
 import com.fittmm.app.data.UserProfile
+import com.fittmm.app.data.VolumeSummary
 import com.fittmm.app.data.Week
 import com.fittmm.app.data.WorkoutPlan
 import com.fittmm.app.databinding.ActivityHomeBinding
-import com.fittmm.app.ui.auth.LoginActivity
+import com.fittmm.app.ui.Units
+import com.fittmm.app.ui.auth.VerifyEmailActivity
+import com.fittmm.app.ui.auth.openClearingTask
+import com.fittmm.app.ui.library.ExerciseLibraryActivity
 import com.fittmm.app.ui.plan.ExerciseListActivity
 import com.fittmm.app.ui.plan.PlanActivity
 import com.fittmm.app.ui.progress.ProgressActivity
 import com.fittmm.app.ui.record.RecordActivity
 import com.fittmm.app.ui.requireSignedIn
+import com.fittmm.app.ui.settings.SettingsActivity
 import com.fittmm.app.ui.tools.BmiActivity
 import com.fittmm.app.ui.tools.PlateActivity
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.fittmm.app.ui.volume.VolumeActivity
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
     private val repo = FittmmRepository()
     private var selectedDay = Week.today()
     private var currentPlan: WorkoutPlan? = null
+    private var metric = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,9 +54,15 @@ class HomeActivity : AppCompatActivity() {
         binding.plateButton.setOnClickListener {
             startActivity(Intent(this, PlateActivity::class.java))
         }
-        binding.themeButton.setOnClickListener { toggleTheme() }
-        binding.wipeButton.setOnClickListener { confirmWipe() }
-        binding.logoutButton.setOnClickListener { logout() }
+        binding.libraryButton.setOnClickListener {
+            startActivity(Intent(this, ExerciseLibraryActivity::class.java))
+        }
+        binding.settingsButton.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        val openVolume = { _: android.view.View -> startActivity(Intent(this, VolumeActivity::class.java)) }
+        binding.volumeCard.setOnClickListener(openVolume)
+        binding.volumeButton.setOnClickListener(openVolume)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -63,7 +75,10 @@ class HomeActivity : AppCompatActivity() {
         if (!requireSignedIn(repo)) {
             return
         }
-        refreshThemeLabel()
+        if (repo.needsEmailVerification()) {
+            openClearingTask(VerifyEmailActivity::class.java)
+            return
+        }
         load()
     }
 
@@ -75,12 +90,15 @@ class HomeActivity : AppCompatActivity() {
                 val name = value?.fname?.trim().orEmpty().ifEmpty {
                     repo.currentEmail().substringBefore("@").ifEmpty { "there" }
                 }
-                binding.greetingText.text = "Hi, $name!"
+                binding.greetingText.text = "Hi, $name"
+                metric = value?.metric() == true
+                loadVolume()
             }
 
             override fun onError(message: String) {
                 if (isDestroyed) return
-                binding.greetingText.text = "Hi!"
+                binding.greetingText.text = "Hi there"
+                loadVolume()
             }
         })
         repo.loadPlan(object : FittmmRepository.ValueCallback<WorkoutPlan> {
@@ -127,54 +145,26 @@ class HomeActivity : AppCompatActivity() {
         )
     }
 
-    private fun refreshThemeLabel() {
-        val night = getSharedPreferences(FittmmApp.PREFS, MODE_PRIVATE).getBoolean(FittmmApp.NIGHT, false)
-        binding.themeButton.text = if (night) "Light mode" else "Dark mode"
-    }
-
-    private fun toggleTheme() {
-        val prefs = getSharedPreferences(FittmmApp.PREFS, MODE_PRIVATE)
-        val night = prefs.getBoolean(FittmmApp.NIGHT, false)
-        prefs.edit().putBoolean(FittmmApp.NIGHT, !night).apply()
-        AppCompatDelegate.setDefaultNightMode(
-            if (night) AppCompatDelegate.MODE_NIGHT_NO else AppCompatDelegate.MODE_NIGHT_YES
-        )
-    }
-
-    private fun confirmWipe() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Remove all data?")
-            .setMessage("Are you sure you want to remove all data? Your name and login stay.")
-            .setNegativeButton("No", null)
-            .setPositiveButton("Yes") { _, _ -> wipe() }
-            .show()
-    }
-
-    private fun wipe() {
-        binding.wipeButton.isEnabled = false
-        repo.wipeUserData(object : FittmmRepository.Done {
-            override fun onSuccess() {
-                if (isDestroyed) return
-                binding.wipeButton.isEnabled = true
-                load()
+    private fun loadVolume() {
+        repo.loadVolume(14, object : FittmmRepository.ValueCallback<VolumeSummary> {
+            override fun onSuccess(value: VolumeSummary?) {
+                if (isDestroyed || value == null) return
+                val unit = Units.weightUnit(metric)
+                binding.volumeText.text = "${Units.volumeText(value.thisWeek, metric)} $unit"
+                binding.volumeDelta.text = when {
+                    value.lastWeek > 0 -> {
+                        val pct = ((value.thisWeek - value.lastWeek) / value.lastWeek * 100).roundToInt()
+                        "${if (pct >= 0) "+" else "-"}${abs(pct)}% vs last week " +
+                            "(${Units.volumeText(value.lastWeek, metric)} $unit)"
+                    }
+                    value.thisWeek > 0 -> "First logged week. This is your baseline."
+                    else -> "Log a workout to start loading the bar."
+                }
             }
 
             override fun onError(message: String) {
-                if (isDestroyed) return
-                binding.wipeButton.isEnabled = true
-                MaterialAlertDialogBuilder(this@HomeActivity)
-                    .setMessage(message)
-                    .setPositiveButton("OK", null)
-                    .show()
+                if (!isDestroyed) binding.volumeDelta.text = message
             }
         })
-    }
-
-    private fun logout() {
-        repo.signOut()
-        startActivity(Intent(this, LoginActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        })
-        finish()
     }
 }

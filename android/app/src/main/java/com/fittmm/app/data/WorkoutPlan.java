@@ -1,7 +1,5 @@
 package com.fittmm.app.data;
 
-import com.google.firebase.firestore.DocumentSnapshot;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,23 +31,11 @@ public class WorkoutPlan {
         return copy;
     }
 
-    public Map<String, Object> toMap() {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("name", name == null ? "" : name);
-        map.put("description", description == null ? "" : description);
-        map.put("days", days);
-        return map;
-    }
-
     public String toJson() {
         return WorkoutPlanCodec.toJson(this);
     }
 
     public static WorkoutPlan fromJson(String json) {
         return WorkoutPlanCodec.fromJson(json);
-    }
-
-    public static WorkoutPlan fromSnapshot(DocumentSnapshot snap) {
-        return WorkoutPlanCodec.fromSnapshot(snap);
     }
 }

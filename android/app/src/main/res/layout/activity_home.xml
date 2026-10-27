@@ -21,8 +21,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif-condensed"
             android:textColor="@color/text"
-            android:textSize="28sp"
+            android:textSize="40sp"
             android:textStyle="bold" />
 
         <HorizontalScrollView
@@ -43,28 +44,56 @@
                     android:text="Create a plan" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/themeButton"
+                    android:id="@+id/libraryButton"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Dark mode" />
+                    android:text="Exercises" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/wipeButton"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    android:id="@+id/settingsButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Remove data" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/logoutButton"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Logout" />
+                    android:layout_marginStart="8dp"
+                    android:text="Settings" />
             </LinearLayout>
         </HorizontalScrollView>
+
+        <LinearLayout
+            android:id="@+id/volumeCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                style="@style/TextAppearance.FITTMM.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="This week's volume" />
+
+            <TextView
+                android:id="@+id/volumeText"
+                style="@style/TextAppearance.FITTMM.Display"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="—"
+                android:textSize="56sp" />
+
+            <TextView
+                android:id="@+id/volumeDelta"
+                style="@style/TextAppearance.FITTMM.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Log a workout to start loading the bar." />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -136,7 +165,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
-                android:text="Progress" />
+                android:text="History" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/volumeButton"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:text="Volume" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/bmiButton"

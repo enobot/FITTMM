@@ -148,11 +148,13 @@ class ExerciseListActivity : AppCompatActivity() {
         }
     }
 
+    /** The user's own exercises plus the photo library, from the API. */
     private fun loadCustom() {
-        repo.loadCustomExercises(object : FittmmRepository.ValueCallback<List<Exercise>> {
+        repo.loadExercises(object : FittmmRepository.ValueCallback<List<Exercise>> {
             override fun onSuccess(value: List<Exercise>?) {
                 vm.custom.clear()
-                vm.custom.addAll(value.orEmpty())
+                vm.library.clear()
+                value.orEmpty().forEach { if (it.custom) vm.custom.add(it) else vm.library.add(it) }
                 if (isDestroyed) return
                 renderExercises()
             }
@@ -163,10 +165,19 @@ class ExerciseListActivity : AppCompatActivity() {
         })
     }
 
+    /** Quick picks first, then the user's own exercises, then the full library. */
     private fun catalog(): List<Exercise> {
-        val presets = Catalog.presets()
-        val taken = presets.map { it.name.lowercase() }.toSet()
-        return presets + vm.custom.filter { it.name.lowercase() !in taken }
+        val byName = vm.library.associateBy { it.name.lowercase() }
+        val presets = Catalog.presets().map { preset ->
+            val key = preset.name.lowercase()
+            val match = byName[key] ?: Catalog.PHOTO_ALIASES[key]?.let { byName[it] }
+            if (match != null) preset.image = match.image
+            preset
+        }
+        val taken = presets.map { it.name.lowercase() }.toMutableSet()
+        val mine = vm.custom.filter { taken.add(it.name.lowercase()) }
+        val rest = vm.library.filter { taken.add(it.name.lowercase()) }
+        return presets + mine + rest
     }
 
     private fun renderExercises() {

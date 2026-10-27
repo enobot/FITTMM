@@ -11,7 +11,6 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 class FittmmApp : Application() {
     override fun onCreate() {
@@ -54,7 +53,8 @@ class FittmmApp : Application() {
 
     /**
      * A real google-services.json initializes Firebase on its own.
-     * Until that file is added, talk to the local Firebase emulators.
+     * Until that file is added, talk to the local Firebase Auth emulator
+     * (`firebase emulators:start --only auth` from the repo root).
      */
     private fun connectLocalFirebaseIfNeeded() {
         if (FirebaseApp.getApps(this).isNotEmpty()) {
@@ -69,8 +69,11 @@ class FittmmApp : Application() {
                 .build()
         )
         val host = if (isEmulatorDevice()) "10.0.2.2" else "127.0.0.1"
-        FirebaseAuth.getInstance().useEmulator(host, 9099)
-        FirebaseFirestore.getInstance().useEmulator(host, 8080)
+        val auth = FirebaseAuth.getInstance()
+        auth.useEmulator(host, 9099)
+        // The emulator accepts phone codes without Play Integrity or reCAPTCHA
+        auth.firebaseAuthSettings.setAppVerificationDisabledForTesting(true)
+        usingAuthEmulator = true
     }
 
     private fun isEmulatorDevice(): Boolean {
@@ -87,5 +90,9 @@ class FittmmApp : Application() {
     companion object {
         const val PREFS = "fittmm"
         const val NIGHT = "night"
+
+        /** True when signing in against the local emulator instead of a real Firebase project. */
+        var usingAuthEmulator = false
+            private set
     }
 }

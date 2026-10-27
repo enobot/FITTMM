@@ -2,11 +2,29 @@ package com.fittmm.app.data;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public final class Catalog {
-    public static final String[] BODY_PARTS = {"legs", "glutes", "abs", "bicep", "back"};
+    /** Body-part groups the exercise library uses (same as the website). */
+    public static final String[] BODY_PARTS = {
+            "chest", "back", "shoulders", "bicep", "triceps", "forearms", "abs", "glutes", "legs", "neck"
+    };
+
+    /** The quick picks use everyday names; these borrow the matching library entry's photo. */
+    public static final Map<String, String> PHOTO_ALIASES = new HashMap<>();
+
+    static {
+        PHOTO_ALIASES.put("squats", "barbell squat");
+        PHOTO_ALIASES.put("deadlifts", "barbell deadlift");
+        PHOTO_ALIASES.put("hip thrusts", "barbell hip thrust");
+        PHOTO_ALIASES.put("front squat", "front barbell squat");
+        PHOTO_ALIASES.put("glute bridges", "barbell glute bridge");
+        PHOTO_ALIASES.put("split squats", "split squat with dumbbells");
+        PHOTO_ALIASES.put("bulgarians", "split squat with dumbbells");
+    }
 
     private Catalog() {}
 
@@ -30,6 +48,9 @@ public final class Catalog {
             return "";
         }
         String trimmed = slug.trim();
+        if ("bicep".equals(trimmed)) {
+            return "Biceps";
+        }
         return trimmed.substring(0, 1).toUpperCase(Locale.US) + trimmed.substring(1);
     }
 

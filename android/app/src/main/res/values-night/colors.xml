@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#3DDC97</color>
-    <color name="primaryDark">#0E3B24</color>
-    <color name="onPrimary">#06210F</color>
-    <color name="accent">#E6A817</color>
-    <color name="background">#101614</color>
-    <color name="surface">#1A2420</color>
-    <color name="surfaceSelected">#24382E</color>
-    <color name="text">#F3F7F4</color>
-    <color name="textSecondary">#B7C4BC</color>
-    <color name="error">#FFB4AB</color>
-    <color name="bar">#6E756F</color>
+    <color name="primary">#6F95FF</color>
+    <color name="primaryDark">#0E1620</color>
+    <color name="onPrimary">#0E1620</color>
+    <color name="accent">#F2B705</color>
+    <color name="background">#161C22</color>
+    <color name="surface">#212A33</color>
+    <color name="surfaceSelected">#2A3A5C</color>
+    <color name="text">#E9EDF1</color>
+    <color name="textSecondary">#B4BEC8</color>
+    <color name="error">#FF8A80</color>
+    <color name="good">#5CCB8A</color>
+    <color name="bar">#6E7782</color>
+    <color name="rule">#34404B</color>
+    <color name="plateRed">#D7263D</color>
+    <color name="plateYellow">#F2B705</color>
+    <color name="plateGreen">#2E9E5B</color>
 </resources>

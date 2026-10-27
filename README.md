@@ -1,6 +1,6 @@
 # FITTMM
 
-A fitness app for planning a training week, recording what you actually lifted, and watching your training volume grow. It started as a three-person team project for a software engineering course: a React and FastAPI web app backed by MySQL. I've since rebuilt the accounts, added an exercise library with photos and tutorial videos, volume tracking and a settings page, and made it deployable. An Android version (Kotlin and Java) shares the same Firebase sign-in.
+A fitness app for planning a training week, recording what you actually lifted, and watching your training volume grow. It started as a three-person team project for a software engineering course: a React and FastAPI web app backed by MySQL. I've since rebuilt the accounts, added an exercise library with photos and tutorial videos, volume tracking and a settings page, and made it deployable. The Android app (Kotlin and Java) uses the same accounts and the same API, so a workout logged on the phone shows up on the website and the other way around.
 
 ## Overview
 
@@ -37,6 +37,13 @@ I came up with the idea and led the team. I wanted something simpler than most w
 
 **Tools:** the plate calculator (lb or kg, details in [docs/plate-calculator.md](docs/plate-calculator.md)) and BMI.
 
+**Android app**
+
+- Same account and data as the website: sign in with Google, Apple or email, email verification, reset by email or by text to a recovery phone.
+- Home with this week's volume, today's plan and the week; plan builder with the photo library; recording workouts; history.
+- Exercise library with photos, steps, form pointers and tutorial videos that open in the YouTube app.
+- Volume page (totals, weekly bars, body parts, per-exercise bests) and Settings (profile, BMI, weight history, sign-in methods, recovery phone, theme, remove data, delete account).
+
 ## Technologies
 
 | Part | Built with |
@@ -44,7 +51,7 @@ I came up with the idea and led the team. I wanted something simpler than most w
 | Frontend | React 19 (Create React App), React Router 6, Firebase Auth JS SDK, Recharts, self-hosted Big Shoulders Display and Barlow fonts |
 | Backend | FastAPI, SQLAlchemy, Alembic, MySQL or MariaDB, firebase-admin (ID token verification), httpx (YouTube Data API) |
 | Exercise data | [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain), photos served from the jsDelivr CDN at a pinned commit |
-| Android | Kotlin for the screens, Java for the data and logic layer, Firebase Auth |
+| Android | Kotlin for the screens, Java for the data and logic layer, Firebase Auth, Credential Manager (one-tap Google), Coil for photos; talks to the same FITTMM API |
 | Hosting | Firebase Hosting for the web app; the API is a Docker image (Railway, Render, Fly.io, Cloud Run or a VPS with Docker Compose) |
 | Tests | pytest with FastAPI's TestClient on SQLite, Jest with React Testing Library, the Firebase Auth emulator for end-to-end runs |
 
@@ -57,6 +64,7 @@ Browser (React) ──Firebase JS SDK──▶ Firebase Auth (Google, Apple, ema
                                                   │
                                                   └──httpx──▶ YouTube Data API (cached)
 Android app ──Firebase SDK──▶ Firebase Auth
+      └──HTTPS + Bearer <Firebase ID token>──▶ the same FastAPI
 ```
 
 - **Signing in.** The web app signs in with Firebase and stores the current ID token as the Bearer token for API calls; Firebase refreshes it automatically. The API verifies it with firebase-admin. The first request from a new account creates its database row; an older email/password row is linked only when Firebase says the email is verified, so nobody can claim someone else's data by signing up with their address.
@@ -160,7 +168,12 @@ npm start
 
 ### Android
 
-Open `android/` in Android Studio (compile SDK 35, min SDK 24). Copy `android/app/google-services.json.example` to `google-services.json` and fill it in from your own Firebase project; the real file is gitignored.
+Open `android/` in Android Studio (compile SDK 35, min SDK 24, JDK 17).
+
+- **Local development:** with no `google-services.json`, the app signs in against the Auth emulator and calls the API at `http://10.0.2.2:8000`, which is your computer as seen from the Android emulator. Start the emulator and the backend first (steps 1 and 2). To use a phone on your Wi-Fi instead, build with `-PfittmmDebugApiUrl=http://<your-computer's-IP>:8000` and run uvicorn with `--host 0.0.0.0`.
+- **Real Firebase project:** copy `android/app/google-services.json.example` to `google-services.json` and fill it in from your project (the real file is gitignored). Add your app's SHA-1 fingerprint in the Firebase console so Google sign-in and phone codes work.
+- **Release builds** call `https://api.example.com` unless you pass `-PfittmmApiUrl=https://your-api` (or set `fittmmApiUrl` in `android/gradle.properties`).
+- Unit tests: `gradlew testDebugUnitTest` from `android/`.
 
 ## Deploying
 
@@ -222,9 +235,11 @@ I ran everything on Oct 27, 2026, on Windows with Python 3.12.10, Node 25.8.0 an
 | Backend | `pytest tests/ -v` (from `backend/`, after `pip install -r requirements_test.txt`) | The original register and login tests, plus: Firebase tokens (new user, unverified email refused, verified email links an old account, takeover blocked, bad token), profile age and BMI, birthday and unit validation, weight history, the seeded library and its filters, per-user custom exercise names, volume totals and timezone handling, everyday names' body parts, video search with and without a key (YouTube mocked, cache checked), legacy auth switch, data wipe and account deletion, unreadable password hashes, form pointers | 25 of 25 passed |
 | Frontend | `npm test -- --watchAll=false` (from `frontend/`) | The original plate calculator and sign-up tests, plus password rules and strength, phone formatting, Firebase error messages, unit conversion and age, sign-up's Google/Apple buttons and age and password checks, log-in without Firebase settings, reset-page validation | 17 of 17 passed, with harmless React Router v7 warnings |
 | Migrations | `alembic upgrade head` on MariaDB 11.4 | Upgraded a database holding older data to the new schema, then downgraded and upgraded again; the old user and global exercise survived, and the library adopted the existing "Romanian Deadlift" instead of duplicating it | Passed |
+| Android | `gradlew testDebugUnitTest` (from `android/`) | Converting plans and workouts to and from the website's format (so both apps read each other's logs), parsing exercises, profile, weight history, volume and videos, API error messages, password and phone rules, age | 10 of 10 passed |
+| Android end to end | Android 15 emulator against the same Auth emulator, API and MariaDB | Logging in with the account created on the website showed its plan and 5,180 lb week; library photos and an exercise page; a workout logged on the phone raised the website's weekly volume to 8,180 lb (checked in the database and on the website); Settings and Volume showed the same profile and totals | Passed |
 | End to end | Browser against the Auth emulator, the API and MariaDB | Email sign-up, verification through `/auth/action`, the welcome step, building a plan, recording a workout (volume 5,180 lb, checked by hand), the Volume page, the library and an exercise page, logging weight history, adding a recovery phone, resetting the password by text and by email link, logging in with the new password, the old password refused, staying signed in after a reload, and phone-width layouts | Passed |
 
-**Not covered yet:** Google and Apple through their real pop-up windows (the test browser can't open pop-ups; the API side was checked with emulator-issued Google and Apple tokens), real SMS and email delivery, a live YouTube API key (the video picker was checked with stand-in results), the Docker image itself (Docker wasn't installed; its entry script was run directly), and the Android app.
+**Not covered yet:** Google and Apple through their real sign-in windows on either app (the test browser can't open pop-ups; the API side was checked with emulator-issued Google and Apple tokens), one-tap Google on Android (it needs a real Firebase project), the Android sign-up, verification, reset and phone screens on the emulator (the same flows were tested on the website), real SMS and email delivery, a live YouTube API key (the video picker was checked with stand-in results), and the Docker image itself (Docker wasn't installed; its entry script was run directly).
 
 ## Security and privacy
 
@@ -248,7 +263,7 @@ Limitations:
 
 ## Limitations and future work
 
-- **Android:** bring the library, volume and settings screens to the app and add tests.
+- **Android:** UI tests for the sign-in screens, and a Play Store release build.
 - **Images to review before going public:** `frontend/public/pictures/` holds anatomy illustrations of unknown origin (not used by the app) and `spongebob.jpeg` (Nickelodeon artwork, shown after saving a plan).
 - **The original plan-flow pages** (create, pick exercises, review, record) still use their earlier styling.
 - **Tokens** moved to httpOnly cookies, and API rate limiting.
