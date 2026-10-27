@@ -1,8 +1,6 @@
-from __future__ import annotations
-from pydantic import BaseModel, EmailStr
-from datetime import date
-from typing import Optional
-
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from datetime import date, datetime
+from typing import Optional, Any
 
 # Properties to receive via API on user creation
 class UserCreate(BaseModel):
@@ -24,25 +22,23 @@ class UserReturn(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class UserMe(BaseModel):
+    id: int
+    email: EmailStr
+    fname: str
+    lname: str
+
+    model_config = {"from_attributes": True}
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-
 # ----- Workout Schemas -----
-class WorkoutPlanCreate(BaseModel):
-    name: str
-    description: str
-    workouts: list[WorkoutCreate]
-
-
-class WorkoutPlanReturn(BaseModel):
-    id: int
-    name: str
-    description: str
-    workouts: list[WorkoutReturn]
-
-    model_config = {"from_attributes": True}
+class WorkoutExerciseCreate(BaseModel):
+    exerciseid: int
+    day_of_week: int
 
 
 class WorkoutCreate(BaseModel):
@@ -51,18 +47,10 @@ class WorkoutCreate(BaseModel):
     workout_exercises: list[WorkoutExerciseCreate]
 
 
-class WorkoutReturn(BaseModel):
-    id: int
+class WorkoutPlanCreate(BaseModel):
     name: str
     description: str
-    workout_exercises: list[WorkoutExerciseReturn]
-
-    model_config = {"from_attributes": True}
-
-
-class WorkoutExerciseCreate(BaseModel):
-    exerciseid: int
-    day_of_week: int
+    workouts: list[WorkoutCreate]
 
 
 class WorkoutExerciseUpdate(BaseModel):
@@ -81,14 +69,42 @@ class WorkoutExerciseReturn(BaseModel):
     weight: Optional[float]
     duration: Optional[float]
     day_of_week: int
+    name: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
 
-class ExerciseCreate(BaseModel):
+class WorkoutReturn(BaseModel):
+    id: int
     name: str
     description: str
-    image: str
+    workout_exercises: list[WorkoutExerciseReturn]
+
+    model_config = {"from_attributes": True}
+
+
+class WorkoutPlanReturn(BaseModel):
+    id: int
+    name: str
+    description: str
+    workouts: list[WorkoutReturn]
+
+
+class ExerciseCreate(BaseModel):
+    name: str
+    description: str = ""
+    image: str = ""
+    body_part: Optional[str] = Field(None, max_length=50)
+
+    @field_validator("body_part", mode="before")
+    @classmethod
+    def normalize_body_part(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            s = v.strip().lower()
+            return s if s else None
+        return v
 
 
 class ExerciseReturn(BaseModel):
@@ -96,12 +112,13 @@ class ExerciseReturn(BaseModel):
     name: str
     description: str
     image: str
+    body_part: Optional[str] = None
+    userid: Optional[int] = None
 
     model_config = {"from_attributes": True}
 
 
 class UserProgressCreate(BaseModel):
-    id: int
     userid: int
     workoutid: int
     exerciseid: int
@@ -111,6 +128,18 @@ class UserProgressCreate(BaseModel):
     duration: float
     date_start: date
     date_end: date
+
+
+class WorkoutSessionCreate(BaseModel):
+    payload: dict[str, Any]
+
+
+class WorkoutSessionOut(BaseModel):
+    id: int
+    logged_at: datetime
+    payload: dict[str, Any]
+
+    model_config = {"from_attributes": True}
 
 
 class UserProgressReturn(BaseModel):

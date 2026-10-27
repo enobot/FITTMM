@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pwdlib import PasswordHash
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
@@ -12,7 +12,7 @@ from core.database import get_db, User
 
 password_hash = PasswordHash.recommended()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+http_bearer = HTTPBearer()
 
 # Hash a given password and return the new hash
 def get_password_hash(password: str) -> str:
@@ -34,12 +34,17 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 # Get the current session user
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
+    db: Session = Depends(get_db),
+):
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    token = credentials.credentials
 
     # Decode the user id from the login token
     try:
