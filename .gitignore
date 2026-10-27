@@ -17,3 +17,8 @@ android/app/google-services.json
 android/firebase-debug.log
 android/firestore-debug.log
 android/.firebase/
+
+# Firebase CLI and local tooling
+/firebase-debug.log
+/.firebase/
+/.claude/

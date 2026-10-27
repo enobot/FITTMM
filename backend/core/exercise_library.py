@@ -93,6 +93,30 @@ def find_visible_exercise(db: Session, name: str, user_id: int):
     )
 
 
+# Everyday names the apps' quick picks use, mapped to their library entries
+EVERYDAY_NAMES = {
+    "squats": "Barbell Squat",
+    "deadlifts": "Barbell Deadlift",
+    "hip thrusts": "Barbell Hip Thrust",
+    "front squat": "Front Barbell Squat",
+    "glute bridges": "Barbell Glute Bridge",
+    "split squats": "Split Squat with Dumbbells",
+    "bulgarians": "Split Squat with Dumbbells",
+}
+
+
+def body_part_for_name(db: Session, name: str, user_id: int) -> str | None:
+    ex = find_visible_exercise(db, name, user_id)
+    if ex and ex.body_part:
+        return ex.body_part
+    alias = EVERYDAY_NAMES.get(name.strip().lower())
+    if alias:
+        lib = find_visible_exercise(db, alias, user_id)
+        if lib:
+            return lib.body_part
+    return None
+
+
 # --------------- Form pointers ---------------
 # Matched against the lowercased exercise name, most specific first.
 _PATTERN_TIPS = [

@@ -19,6 +19,7 @@ TC-24  Legacy password endpoints can be switched off
 TC-25  Remove all data clears weights; delete account removes the user
 TC-26  Form pointers match the movement, not substrings
 TC-27  An unreadable password hash is a failed login (401), not a crash
+TC-28  Everyday exercise names borrow the library's body part for volume
 
 Run from the backend/ directory:
     pytest tests/ -v
@@ -243,6 +244,19 @@ def test_TC20_volume_summary(client):
     assert squat["body_part"] == "legs"
     assert v["by_body_part"][0] == {"body_part": "legs", "volume": 2675, "sets": 3}
     assert len(v["daily"]) == 30 and v["daily"][-1] == {"date": today.isoformat(), "volume": 2000}
+
+
+def test_TC28_everyday_names_get_library_body_parts(client):
+    headers = legacy_token(client)
+    # The plan builder saves quick picks like "Hip Thrusts" as custom exercises without a body part
+    client.post("/workout/exercises", headers=headers, json={"name": "Hip Thrusts"})
+    client.post("/workout/sessions", headers=headers, json=workout(date(2026, 10, 27), [
+        ("Hip Thrusts", [(10, 225)]),
+        ("Mystery Move", [(10, 10)]),
+    ]))
+    v = client.get("/workout/volume?days=7&today=2026-10-27", headers=headers).json()
+    parts = {p["body_part"]: p["volume"] for p in v["by_body_part"]}
+    assert parts == {"glutes": 2250, "other": 100}
 
 
 def test_TC21_volume_timezone():

@@ -406,8 +406,7 @@ def volume_summary(
     def body_part_of(name: str):
         key = name.lower()
         if key not in parts:
-            ex = exercise_library.find_visible_exercise(db, name, current_user.id)
-            parts[key] = ex.body_part if ex else None
+            parts[key] = exercise_library.body_part_for_name(db, name, current_user.id)
         return parts[key]
 
     return compute_volume(rows, body_part_of, days, today, tz_offset)
