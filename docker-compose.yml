@@ -1,0 +1,40 @@
+# Self-hosted API and database on one machine:
+#   cp .env.compose.example .env   (then fill it in)
+#   docker compose up -d --build
+# The web app is deployed separately (Firebase Hosting); see README.
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: fitness_app
+      MARIADB_USER: fitness_user
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+mysqlconnector://fitness_user:${DB_PASSWORD}@db/fitness_app
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:?set FIREBASE_PROJECT_ID in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS in .env}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      ENABLE_LEGACY_PASSWORD_AUTH: "false"
+      SEED_DEMO_USER: "false"
+    ports:
+      - "8000:8000"
+
+volumes:
+  db-data:
