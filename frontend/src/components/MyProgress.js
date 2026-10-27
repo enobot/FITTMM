@@ -11,7 +11,24 @@ import {
 } from "recharts";
 import "./MyProgress.css";
 
-const CHART_COLORS = ["#2f64c8", "#e67e22", "#8e939a", "#22a06b"];
+// Validated categorical palette (blue, orange, aqua), stepped for each theme
+const CHART_COLORS = {
+  light: ["#2a78d6", "#eb6834", "#1baf7a"],
+  dark: ["#3987e5", "#d95926", "#199e70"],
+};
+
+function themeColors() {
+  const root = document.documentElement;
+  const style = getComputedStyle(root);
+  const read = (name) => style.getPropertyValue(name).trim();
+  return {
+    series: CHART_COLORS[root.dataset.theme === "dark" ? "dark" : "light"],
+    grid: read("--rule") || "#c9d0d6",
+    text: read("--ink-soft") || "#4a5562",
+    ink: read("--ink") || "#18212b",
+    surface: read("--paper") || "#ffffff",
+  };
+}
 const RANGE_OPTIONS = [
   { id: "10", days: 10 },
   { id: "30", days: 30 },
@@ -150,7 +167,7 @@ function MyProgress({ sessions = [], sessionsLoading = false }) {
 
     const datasets = activeCategories.map((category, idx) => ({
       name: category,
-      color: CHART_COLORS[idx % CHART_COLORS.length],
+      slot: idx,
       values: dateLabels.map((key) => byCategoryDate[category]?.[key] || 0),
     }));
 
@@ -177,13 +194,14 @@ function MyProgress({ sessions = [], sessionsLoading = false }) {
   }, [normalizedRows, selectedRange.days]);
 
   const formatVolume = (value) => new Intl.NumberFormat("en-US").format(value);
+  const colors = themeColors();
 
   return (
     <div className="my-progress-card">
       <header className="my-progress-header">
         <h2 className="homepage-section-title">My Progress</h2>
         <select
-          className="my-progress-range"
+          className="f-select my-progress-range"
           value={selectedRangeId}
           onChange={(e) => setSelectedRangeId(e.target.value)}
           aria-label="Select date range for progress chart"
@@ -205,27 +223,35 @@ function MyProgress({ sessions = [], sessionsLoading = false }) {
           <div className="my-progress-chart">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartModel.chartRows} margin={{ top: 8, right: 16, bottom: 8, left: 6 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#d4dde7" />
-                <XAxis dataKey="label" tick={{ fill: "#475569", fontSize: 11 }} />
+                <CartesianGrid vertical={false} stroke={colors.grid} />
+                <XAxis dataKey="label" tick={{ fill: colors.text, fontSize: 11 }} tickLine={false} axisLine={{ stroke: colors.grid }} minTickGap={12} />
                 <YAxis
-                  tick={{ fill: "#475569", fontSize: 11 }}
+                  tick={{ fill: colors.text, fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={52}
                   domain={[0, chartModel.maxVolume]}
                   tickFormatter={formatVolume}
                 />
                 <Tooltip
                   formatter={(value, name) => [formatVolume(Number(value)), name]}
                   labelFormatter={(label) => `Date: ${label}`}
+                  contentStyle={{ background: colors.surface, border: `1px solid ${colors.grid}`, borderRadius: 6, color: colors.ink }}
                 />
-                <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: "8px" }} />
+                <Legend
+                  verticalAlign="bottom"
+                  wrapperStyle={{ paddingTop: "8px" }}
+                  formatter={(value) => <span style={{ color: colors.ink }}>{value}</span>}
+                />
                 {chartModel.datasets.map((dataset) => (
                   <Line
                     key={dataset.name}
-                    type="monotone"
+                    type="linear"
                     dataKey={dataset.name}
-                    stroke={dataset.color}
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
+                    stroke={colors.series[dataset.slot % colors.series.length]}
+                    strokeWidth={2}
+                    dot={{ r: 4, strokeWidth: 2, stroke: colors.surface, fill: colors.series[dataset.slot % colors.series.length] }}
+                    activeDot={{ r: 6, strokeWidth: 2, stroke: colors.surface }}
                   />
                 ))}
               </LineChart>
