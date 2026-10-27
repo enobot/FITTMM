@@ -1,0 +1,30 @@
+.plate-stack {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.plate-stack-sleeve {
+  fill: #a9b2ba;
+}
+
+.plate-stack-collar {
+  fill: #7d8790;
+}
+
+.plate-stack-plate {
+  stroke: rgba(0, 0, 0, 0.18);
+  stroke-width: 1;
+}
+
+.plate-stack-hub {
+  fill: rgba(0, 0, 0, 0.16);
+}
+
+.plate-stack-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  fill: var(--ink-soft);
+}

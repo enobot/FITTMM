@@ -1,28 +1,33 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { API_BASE_URL } from "../apiConfig";
-import { applyUserSession } from "../utils/fittmmStorage";
-import { fetchWithTimeout } from "../api/workoutApi";
-import "./Login.css";
-
-const LOGIN_FETCH_MS = 30000;
-
-function parseLoginError(response, rawBody, fallback) {
-  if (!rawBody) return fallback;
-  try {
-    const data = JSON.parse(rawBody);
-    if (typeof data.detail === "string") return data.detail;
-    if (Array.isArray(data.detail))
-      return data.detail.map((x) => x.msg || JSON.stringify(x)).join(" ");
-  } catch (_) {}
-  return fallback;
-}
+import { useNavigate, useLocation, Link, Navigate } from "react-router-dom";
+import { AuthLayout, SocialButtons, OrDivider, PasswordInput } from "../auth/AuthLayout";
+import { authErrorMessage, signInWithEmail, signInWithProvider } from "../auth/authService";
+import { useRedirectSignIn } from "../auth/useRedirectSignIn";
+import { destinationAfterSignIn } from "../auth/afterSignIn";
+import { useAuth, needsEmailVerification, AuthSplash } from "../auth/AuthContext";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { ready, user, configError } = useAuth();
+  const from = location.state?.from;
+  const redirect = useRedirectSignIn(from);
+
+  if (redirect.checking) return <AuthSplash />;
+
+  // Already signed in (for example, "Keep me signed in" from last time)
+  if (ready && user && !busy) {
+    return <Navigate to={needsEmailVerification(user) ? "/verify-email" : from || "/homepage"} replace />;
+  }
+
+  const finish = async () => {
+    navigate(await destinationAfterSignIn(from), { replace: true });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,105 +39,89 @@ function Login() {
       return;
     }
 
-    const formData = new URLSearchParams();
-    formData.append("username", emailNorm); // FastAPI OAuth2 uses 'username'
-    formData.append("password", password);
-
+    setBusy(true);
     try {
-      const response = await fetchWithTimeout(
-        `${API_BASE_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData,
-        },
-        LOGIN_FETCH_MS
-      );
-
-      const raw = await response.text();
-
-      if (response.ok) {
-        let data;
-        try {
-          data = raw ? JSON.parse(raw) : {};
-        } catch (_) {
-          setError("Invalid response from server.");
-          return;
-        }
-        localStorage.setItem("token", data.access_token);
-
-        try {
-          const meRes = await fetchWithTimeout(
-            `${API_BASE_URL}/auth/me`,
-            {
-              headers: { Authorization: `Bearer ${data.access_token}` },
-            },
-            LOGIN_FETCH_MS
-          );
-          if (meRes.ok) {
-            const meRaw = await meRes.text();
-            const me = meRaw ? JSON.parse(meRaw) : {};
-            applyUserSession(me);
-          }
-        } catch (_) {
-          /* profile sync can finish on homepage */
-        }
-        navigate("/homepage");
-        return;
-      }
-
-      const fallback =
-        response.status === 401
-          ? "Incorrect email or password."
-          : `Could not log in (${response.status}).`;
-      setError(parseLoginError(response, raw, fallback));
+      await signInWithEmail(emailNorm, password, remember);
+      await finish();
     } catch (err) {
-      const hint =
-        API_BASE_URL === ""
-          ? " Start the API on port 8000 and use npm start (proxy)."
-          : ` API URL: ${API_BASE_URL}.`;
-      setError(
-        (err?.message || "Could not connect to the server.") +
-          hint
-      );
+      setError(authErrorMessage(err) || "");
+      setBusy(false);
+    }
+  };
+
+  const handleProvider = async (which) => {
+    setError("");
+    setBusy(true);
+    try {
+      const { user: signedIn } = await signInWithProvider(which, remember);
+      if (signedIn) await finish();
+    } catch (err) {
+      setError(authErrorMessage(err) || "");
+      setBusy(false);
     }
   };
 
   return (
-    <div className="login-page">
-      <p className="login-quote">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-      </p>
-      <div className="login-center">
-        <div className="login-brand">FITTMM</div>
-        <div className="login-box">
-        <h1>Login</h1>
-        {error && <p className="login-error">{error}</p>}
+    <AuthLayout>
+      <h1>Log in</h1>
+      <p className="auth-lede">Welcome back. Your week is waiting.</p>
 
-        <form onSubmit={handleSubmit}>
+      {configError ? <p className="f-alert">{configError}</p> : null}
+      {error || redirect.error ? (
+        <p className="f-alert" role="alert">
+          {error || redirect.error}
+        </p>
+      ) : null}
+
+      <SocialButtons onSelect={handleProvider} busy={busy} />
+      <OrDivider />
+
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="f-field">
+          <label className="f-label" htmlFor="login-email">
+            Email
+          </label>
           <input
+            id="login-email"
+            className="f-input"
             type="email"
             placeholder="Email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+        </div>
 
-          <input
-            type="password"
-            placeholder="Password"
+        <div className="f-field">
+          <div className="auth-label-row">
+            <label className="f-label" htmlFor="login-password">
+              Password
+            </label>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </div>
+          <PasswordInput
+            id="login-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            autoComplete="current-password"
           />
+        </div>
 
-          <button type="submit">Log In</button>
+        <label className="auth-check">
+          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          Keep me signed in on this device
+        </label>
 
-          <p className="login-signup-prompt">
-            Don't have an account? <Link to="/signup">Sign up</Link>
-          </p>
-        </form>
-      </div>
-      </div>
-    </div>
+        <button type="submit" className="f-btn f-btn--primary f-btn--block" disabled={busy}>
+          {busy ? "Logging in…" : "Log in"}
+        </button>
+      </form>
+
+      <p className="auth-foot">
+        New to FITTMM? <Link to="/signup">Create an account</Link>
+      </p>
+    </AuthLayout>
   );
 }
 

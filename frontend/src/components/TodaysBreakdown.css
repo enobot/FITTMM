@@ -289,6 +289,18 @@
   border-bottom-color: #49596a;
 }
 
+.workout-preview-thumb:has(.workout-preview-photo) {
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.workout-preview-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .homepage--dark .workout-preview-thumb {
   border-color: #49596a;
   background: #25313b;

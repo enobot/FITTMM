@@ -1,44 +1,65 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Homepage.css";
+import TopNav from "../components/TopNav";
+import PlateStack from "../components/PlateStack";
 import TodaysBreakdown from "../components/TodaysBreakdown";
 import PlateCalculator from "../components/PlateCalculator";
 import MyProgress from "../components/MyProgress";
-import { API_BASE_URL } from "../apiConfig";
 import { fetchSessions } from "../api/workoutApi";
+import { getProfile, getVolume, localDateString } from "../api/accountApi";
 import { useWorkoutPlan } from "../hooks/useWorkoutPlan";
-import {
-  getStoredUser,
-  clearUserSession,
-  applyUserSession,
-  clearAllLocalUserData,
-} from "../utils/fittmmStorage";
+import { useExerciseCatalog, nameKey } from "../hooks/useExerciseCatalog";
+import { useAuth } from "../auth/AuthContext";
+import { useTheme } from "../theme";
+import { formatHeight, formatVolume, formatWeight, weightUnit } from "../utils/units";
 
 const WEEK_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+function startOfWeek(d = new Date()) {
+  const s = new Date(d);
+  s.setHours(0, 0, 0, 0);
+  s.setDate(s.getDate() - s.getDay());
+  return s;
+}
+
+/** This week's training days as plates in day order; thicker plate = more volume. */
+function weekPlates(volume, unitSystem) {
+  if (!volume?.daily) return [];
+  const start = localDateString(startOfWeek());
+  const days = volume.daily.filter((d) => d.date >= start && d.volume > 0);
+  if (!days.length) return [];
+  const max = Math.max(...days.map((d) => d.volume));
+  return days.map((d) => {
+    const share = d.volume / max;
+    const [y, m, day] = d.date.split("-").map(Number);
+    const label = new Date(y, m - 1, day).toLocaleDateString("en-US", { weekday: "short" });
+    return {
+      key: d.date,
+      color: "var(--action)",
+      thickness: Math.round(12 + 26 * share),
+      height: share < 0.35 ? 130 : 190,
+      label,
+      title: `${label}: ${formatVolume(d.volume, unitSystem)} ${weightUnit(unitSystem)}`,
+    };
+  });
+}
+
 function Homepage() {
   const navigate = useNavigate();
-  const [isDark, setIsDark] = useState(false);
-  const [sessionUser, setSessionUser] = useState(() => getStoredUser());
-  const { selections: planSelections, loading: planLoading, reload: reloadPlan } =
-    useWorkoutPlan();
+  const { me } = useAuth();
+  const { isDark } = useTheme();
+  const { selections: planSelections, loading: planLoading } = useWorkoutPlan();
+  const { byName } = useExerciseCatalog();
   const [sessions, setSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
-  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
-  const [wipeConfirmOpen, setWipeConfirmOpen] = useState(false);
-  const [wiping, setWiping] = useState(false);
-  const settingsWrapRef = useRef(null);
+  const [volume, setVolume] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   const reloadSessions = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setSessions([]);
-      return;
-    }
     setSessionsLoading(true);
     try {
-      const list = await fetchSessions();
-      setSessions(list);
+      setSessions(await fetchSessions());
     } catch {
       setSessions([]);
     } finally {
@@ -47,73 +68,23 @@ function Homepage() {
   }, []);
 
   useEffect(() => {
-    function handlePointerDown(e) {
-      if (!settingsMenuOpen) return;
-      if (settingsWrapRef.current && !settingsWrapRef.current.contains(e.target)) {
-        setSettingsMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [settingsMenuOpen]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function syncProfile() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        if (!cancelled) setSessionUser(null);
-        return;
-      }
-      if (getStoredUser()) {
-        if (!cancelled) setSessionUser(getStoredUser());
-        return;
-      }
-      try {
-        const meRes = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (meRes.ok) {
-          const me = await meRes.json();
-          applyUserSession(me);
-          if (!cancelled) setSessionUser(getStoredUser());
-        }
-      } catch {
-        if (!cancelled) setSessionUser(getStoredUser());
-      }
-    }
-
-    syncProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     reloadSessions();
-  }, [sessionUser?.id, reloadSessions]);
+    getVolume(14).then(setVolume).catch(() => setVolume(null));
+    getProfile().then(setProfile).catch(() => setProfile(null));
+  }, [reloadSessions, me?.id]);
 
-  const dateString = useMemo(() => {
-    return new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  }, []);
+  const unitSystem = profile?.unit_system || "imperial";
 
-  const todayName = useMemo(
-    () => new Date().toLocaleDateString("en-US", { weekday: "long" }),
+  const dateString = useMemo(
+    () => new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
     []
   );
+  const todayName = useMemo(() => new Date().toLocaleDateString("en-US", { weekday: "long" }), []);
   const [selectedBreakdownDay, setSelectedBreakdownDay] = useState(todayName);
 
   const weeklyPlan = useMemo(() => {
     const parsed = planSelections || {};
-    const hasAnySelections = Object.values(parsed).some(
-      (items) => Array.isArray(items) && items.length > 0
-    );
+    const hasAnySelections = Object.values(parsed).some((items) => Array.isArray(items) && items.length > 0);
     return WEEK_DAYS.map((day) => ({
       day,
       short: day.slice(0, 3),
@@ -122,222 +93,193 @@ function Homepage() {
     }));
   }, [planSelections]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    clearUserSession();
-    navigate("/");
-  };
-
-  const confirmRemoveAllData = async () => {
-    const token = localStorage.getItem("token");
-    const uid = getStoredUser()?.id;
-    if (!token || uid == null) return;
-    setWiping(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/auth/me/data`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        let detail = "Could not remove data.";
-        try {
-          const err = await res.json();
-          if (typeof err.detail === "string") detail = err.detail;
-        } catch (_) {}
-        throw new Error(detail);
+  const loggedThisWeek = useMemo(() => {
+    const done = new Set();
+    const start = localDateString(startOfWeek());
+    (volume?.daily || []).forEach((d) => {
+      if (d.date >= start && d.volume > 0) {
+        const [y, m, day] = d.date.split("-").map(Number);
+        done.add(WEEK_DAYS[new Date(y, m - 1, day).getDay()]);
       }
-      clearAllLocalUserData(uid);
-      await reloadPlan();
-      await reloadSessions();
-      setWipeConfirmOpen(false);
-      setSettingsMenuOpen(false);
-    } catch (e) {
-      const raw = e?.message || "";
-      let hint = "";
-      if (
-        raw === "Failed to fetch" ||
-        raw === "NetworkError when attempting to fetch resource."
-      ) {
-        hint =
-          API_BASE_URL === ""
-            ? " Could not reach the API. Start the backend (uvicorn on port 8000), ensure package.json has \"proxy\" pointing at it, then restart npm start."
-            : ` Could not reach ${API_BASE_URL}. Is the API running?`;
-      }
-      alert((raw || "Could not remove data.") + hint);
-    } finally {
-      setWiping(false);
-    }
-  };
+    });
+    return done;
+  }, [volume]);
 
-  const displayName = sessionUser?.fname?.trim() || "there";
+  const plates = useMemo(() => weekPlates(volume, unitSystem), [volume, unitSystem]);
+  const photoFor = useCallback((name) => byName.get(nameKey(name))?.image || null, [byName]);
+
+  const todays = weeklyPlan.find((d) => d.day === todayName);
+  const hasPlan = weeklyPlan.some((d) => d.exercises.length > 0);
+  const firstName = me?.fname?.trim() || profile?.fname || "";
+
+  let todayLine;
+  if (planLoading) todayLine = "Loading today's plan…";
+  else if (!hasPlan) todayLine = "You don't have a weekly plan yet. Build one to see each day's lifts here.";
+  else if (!todays?.exercises.length) todayLine = "Rest day. Recovery is part of the plan.";
+  else if (loggedThisWeek.has(todayName)) todayLine = `Today's ${todays.exercises.length} lifts are logged. Nice work.`;
+  else todayLine = `Today: ${todays.exercises.slice(0, 3).join(", ")}${todays.exercises.length > 3 ? ` and ${todays.exercises.length - 3} more` : ""}.`;
+
+  const thisWeek = volume?.this_week || 0;
+  const lastWeek = volume?.last_week || 0;
+  let delta = null;
+  if (lastWeek > 0) {
+    const pct = Math.round(((thisWeek - lastWeek) / lastWeek) * 100);
+    delta = `${pct >= 0 ? "+" : ""}${pct}% vs last week (${formatVolume(lastWeek, unitSystem)} ${weightUnit(unitSystem)})`;
+  } else if (thisWeek > 0) {
+    delta = "First logged week. This is your baseline.";
+  }
 
   return (
     <div className={`homepage ${isDark ? "homepage--dark" : ""}`}>
-      <nav className="homepage-nav">
-        <span className="homepage-nav-date">{dateString}</span>
-        <span className="homepage-nav-greeting">Hi, {displayName}!</span>
-        <div className="homepage-nav-actions">
-          <Link
-            to="/plan/new"
-            className="homepage-nav-btn homepage-nav-link"
-          >
-            Create a plan
+      <TopNav />
+
+      <main className="home">
+        <section className="home-hero" aria-labelledby="home-hello">
+          <div className="home-hello">
+            <p className="home-date">{dateString}</p>
+            <h1 id="home-hello" className="f-display home-hi">
+              {firstName ? `Hi, ${firstName}` : "Hi there"}
+            </h1>
+            <p className="home-today">{todayLine}</p>
+            <div className="home-hero-actions">
+              {hasPlan && todays?.exercises.length ? (
+                <Link to="/recordWorkout" className="f-btn f-btn--primary">
+                  Record today's workout
+                </Link>
+              ) : (
+                <Link to="/plan/new" className="f-btn f-btn--primary">
+                  {hasPlan ? "Edit your plan" : "Build your plan"}
+                </Link>
+              )}
+              <Link to="/exercises" className="f-btn f-btn--quiet">
+                Browse exercises
+              </Link>
+            </div>
+          </div>
+
+          <Link to="/volume" className="home-load" aria-label="This week's volume. Open the volume page.">
+            <span className="home-load-label">This week's volume</span>
+            <span className="home-load-num f-num">
+              {formatVolume(thisWeek, unitSystem)}
+              <span className="home-load-unit">{weightUnit(unitSystem)}</span>
+            </span>
+            <span className="home-load-delta">{delta || "Log a workout to start loading the bar."}</span>
+            <PlateStack
+              plates={plates}
+              minWidth={520}
+              className="home-load-bar"
+              title={
+                plates.length
+                  ? `Training days this week: ${plates.map((p) => p.title).join("; ")}`
+                  : "No training logged this week"
+              }
+            />
           </Link>
-          <button
-            type="button"
-            className={`homepage-nav-btn homepage-nav-theme-toggle ${
-              isDark ? "homepage-nav-theme-toggle--dark" : "homepage-nav-theme-toggle--light"
-            }`}
-            onClick={() => setIsDark((d) => !d)}
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {isDark ? (
-              <span className="homepage-nav-icon" aria-hidden>☀</span>
-            ) : (
-              <span className="homepage-nav-icon" aria-hidden>☾</span>
-            )}
-          </button>
-          <div className="homepage-settings-wrap" ref={settingsWrapRef}>
+        </section>
+
+        <section className="home-week" aria-labelledby="home-week-title">
+          <div className="home-row-head">
+            <h2 id="home-week-title" className="homepage-section-title">
+              This week
+            </h2>
             <button
               type="button"
-              className="homepage-nav-btn"
-              title="Settings"
-              aria-label="Settings"
-              aria-haspopup="true"
-              aria-expanded={settingsMenuOpen}
-              onClick={() => setSettingsMenuOpen((o) => !o)}
+              className="f-link"
+              onClick={() => navigate("/listOfExercises", { state: { source: "weekly-edit" } })}
             >
-              <span className="homepage-nav-icon" aria-hidden>⚙</span>
+              Edit plan
             </button>
-            {settingsMenuOpen ? (
-              <div className="homepage-settings-menu" role="menu">
-                <button
-                  type="button"
-                  className="homepage-settings-menu-item homepage-settings-menu-item--danger"
-                  role="menuitem"
-                  onClick={() => {
-                    setSettingsMenuOpen(false);
-                    setWipeConfirmOpen(true);
-                  }}
-                >
-                  Remove all data
-                </button>
-              </div>
-            ) : null}
           </div>
-          <button
-            type="button"
-            className="homepage-nav-btn homepage-nav-logout"
-            onClick={handleLogout}
-            title="Logout"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
-
-      <main className="homepage-main">
-        <section className="homepage-section homepage-section--todays">
-          <TodaysBreakdown
-            selectedDay={selectedBreakdownDay}
-            planSelections={planSelections}
-            sessions={sessions}
-            planLoading={planLoading}
-            sessionsLoading={sessionsLoading}
-          />
-        </section>
-        <section className="homepage-section">
-          <MyProgress sessions={sessions} sessionsLoading={sessionsLoading} />
-        </section>
-        <section className="homepage-section homepage-section--weekly">
-          <h2 className="homepage-section-title">Weekly</h2>
-          <div className="homepage-weekly">
-            <div className="homepage-weekly-grid">
-              {weeklyPlan.map((slot) => (
+          <div className="home-week-grid">
+            {weeklyPlan.map((slot) => {
+              const isToday = slot.day === todayName;
+              const isSelected = slot.day === selectedBreakdownDay;
+              const done = loggedThisWeek.has(slot.day);
+              return (
                 <button
                   type="button"
                   key={slot.day}
-                  className={`homepage-weekly-day ${
-                    slot.day === todayName ? "homepage-weekly-day--current" : ""
-                  } ${
-                    slot.day === selectedBreakdownDay ? "homepage-weekly-day--selected" : ""
-                  }`}
+                  className={`home-day ${isToday ? "home-day--today" : ""} ${isSelected ? "home-day--selected" : ""}`}
                   onClick={() => setSelectedBreakdownDay(slot.day)}
-                  aria-label={`Show ${slot.day} workout in Today's Breakdown`}
+                  aria-pressed={isSelected}
+                  aria-label={`${slot.day}${isToday ? ", today" : ""}${done ? ", logged" : ""}. Show in today's breakdown.`}
                 >
-                  <h3 className="homepage-weekly-day-title">{slot.short}</h3>
+                  <span className="home-day-name">
+                    {slot.short}
+                    {done ? <span className="home-day-done" aria-hidden="true">✓</span> : null}
+                  </span>
                   {!slot.hasAnySelections ? null : slot.exercises.length === 0 ? (
-                    <p className="homepage-weekly-rest">REST</p>
+                    <span className="home-day-rest">Rest</span>
                   ) : (
-                    <ul className="homepage-weekly-list">
+                    <ul className="home-day-list">
                       {slot.exercises.map((exercise) => (
-                        <li key={`${slot.day}-${exercise}`} className="homepage-weekly-item">
-                          {exercise}
-                        </li>
+                        <li key={`${slot.day}-${exercise}`}>{exercise}</li>
                       ))}
                     </ul>
                   )}
                 </button>
-              ))}
-              <button
-                type="button"
-                className="homepage-weekly-day homepage-weekly-edit-tile"
-                onClick={() =>
-                  navigate("/listOfExercises", { state: { source: "weekly-edit" } })
-                }
-                aria-label="Edit weekly plan"
-              >
-                <span className="homepage-weekly-edit-label">Edit</span>
-              </button>
-            </div>
+              );
+            })}
           </div>
         </section>
-        <section className="homepage-section">
-          <PlateCalculator isDark={isDark} />
-        </section>
-      </main>
 
-      {wipeConfirmOpen ? (
-        <div
-          className="homepage-modal-overlay"
-          role="presentation"
-          onClick={() => !wiping && setWipeConfirmOpen(false)}
-        >
-          <div
-            className="homepage-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="homepage-wipe-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="homepage-wipe-title" className="homepage-modal-title">
-              Remove all data?
-            </h2>
-            <p className="homepage-modal-body">
-              Are you sure you want to remove all data?
-            </p>
-            <div className="homepage-modal-actions">
-              <button
-                type="button"
-                className="homepage-modal-btn homepage-modal-btn--secondary"
-                onClick={() => !wiping && setWipeConfirmOpen(false)}
-                disabled={wiping}
-              >
-                No
-              </button>
-              <button
-                type="button"
-                className="homepage-modal-btn homepage-modal-btn--danger"
-                onClick={confirmRemoveAllData}
-                disabled={wiping}
-              >
-                {wiping ? "Removing…" : "Yes"}
-              </button>
-            </div>
-          </div>
+        <div className="home-grid">
+          <section className="home-panel home-panel--breakdown" aria-label="Today's breakdown">
+            <TodaysBreakdown
+              selectedDay={selectedBreakdownDay}
+              planSelections={planSelections}
+              sessions={sessions}
+              planLoading={planLoading}
+              sessionsLoading={sessionsLoading}
+              photoFor={photoFor}
+            />
+          </section>
+          <section className="home-panel">
+            <MyProgress sessions={sessions} sessionsLoading={sessionsLoading} />
+          </section>
         </div>
-      ) : null}
+
+        <div className="home-grid home-grid--tools">
+          <section className="home-panel home-body" aria-labelledby="home-body-title">
+            <div className="home-row-head">
+              <h2 id="home-body-title" className="homepage-section-title">
+                Body
+              </h2>
+              <Link to="/settings" className="f-link">
+                Update
+              </Link>
+            </div>
+            {profile && (profile.weight || profile.height) ? (
+              <dl className="home-stats">
+                <div>
+                  <dt>Weight</dt>
+                  <dd className="f-num">{formatWeight(profile.weight, unitSystem)}</dd>
+                </div>
+                <div>
+                  <dt>BMI</dt>
+                  <dd className="f-num">{profile.bmi ?? "—"}</dd>
+                  {profile.bmi_category ? <dd className="home-stats-note">{profile.bmi_category}</dd> : null}
+                </div>
+                <div>
+                  <dt>Height</dt>
+                  <dd className="f-num">{formatHeight(profile.height, unitSystem)}</dd>
+                </div>
+                <div>
+                  <dt>Goal</dt>
+                  <dd className="f-num">{profile.goal_weight ? formatWeight(profile.goal_weight, unitSystem) : "—"}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="home-empty">
+                Add your height and weight in <Link to="/settings">Settings</Link> to see your BMI and weight trend.
+              </p>
+            )}
+          </section>
+          <section className="home-panel">
+            <PlateCalculator isDark={isDark} />
+          </section>
+        </div>
+      </main>
     </div>
   );
 }

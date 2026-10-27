@@ -8,6 +8,9 @@ import {
   postSession,
 } from "../api/workoutApi";
 import { getScopedItem, K, clearUserSession } from "../utils/fittmmStorage";
+import { localDateString } from "../api/accountApi";
+import { signOutEverywhere } from "../auth/authService";
+import { useExerciseCatalog, nameKey } from "../hooks/useExerciseCatalog";
 import "./RecordWorkout.css";
 
 const DEFAULT_EXERCISES = [
@@ -17,7 +20,7 @@ const DEFAULT_EXERCISES = [
   { id: "cry", name: "Cry", stars: 2, thumbLabel: "Deadlifts" },
 ];
 
-function ExerciseCard({ exercise, value, onChange }) {
+function ExerciseCard({ exercise, value, onChange, photo }) {
   const sets = Array.isArray(value?.sets) ? value.sets : [];
   const rating = typeof value?.rating === "number" ? value.rating : exercise.stars || 0;
   const [hoverRating, setHoverRating] = useState(0);
@@ -105,7 +108,9 @@ function ExerciseCard({ exercise, value, onChange }) {
               Rate this workout so you can remember how you felt today while doing {exercise.name}.
             </span>
           </div>
-          <div className="record-workout-thumb">{exercise.thumbLabel}</div>
+          <div className={`record-workout-thumb ${photo ? "record-workout-thumb--photo" : ""}`}>
+            {photo ? <img src={photo} alt={`${exercise.name} demonstration`} loading="lazy" /> : exercise.thumbLabel}
+          </div>
         </div>
         <div className="record-workout-card-main">
           <div className="record-workout-logged-wrap">
@@ -218,6 +223,7 @@ function buildEntriesFromExercises(exercisesList, latestDayPayload) {
 
 function RecordWorkout() {
   const navigate = useNavigate();
+  const { byName } = useExerciseCatalog();
 
   const [planSelections, setPlanSelections] = useState({});
   const [sessions, setSessions] = useState([]);
@@ -302,6 +308,8 @@ function RecordWorkout() {
     const dayRecord = {
       day: selectedDay,
       date: dateIso,
+      // The user's calendar day, so volume lands on the right day in any timezone
+      local_date: localDateString(),
       exercises: exercises.map((exercise) => {
         const current = exerciseEntries[exercise.id] || { sets: [], rating: exercise.stars || 0 };
         const savedSets = (current.sets || []).map((row) => ({
@@ -349,13 +357,16 @@ function RecordWorkout() {
           >
             Home
           </button>
-          <button type="button" className="record-workout-nav-link">
+          <button type="button" className="record-workout-nav-link" onClick={() => navigate("/settings")}>
             settings
           </button>
           <button
             type="button"
             className="record-workout-nav-link"
-            onClick={() => {
+            onClick={async () => {
+              try {
+                await signOutEverywhere();
+              } catch (_) {}
               localStorage.removeItem("token");
               clearUserSession();
               navigate("/");
@@ -373,6 +384,7 @@ function RecordWorkout() {
           <ExerciseCard
             key={ex.id}
             exercise={ex}
+            photo={byName.get(nameKey(ex.name))?.image || null}
             value={exerciseEntries[ex.id]}
             onChange={(next) => updateExerciseEntry(ex.id, next)}
           />

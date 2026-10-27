@@ -172,6 +172,18 @@
   box-sizing: border-box;
 }
 
+.record-workout-thumb--photo {
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.record-workout-thumb--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .record-workout-card-main {
   flex: 1;
   min-width: 0;

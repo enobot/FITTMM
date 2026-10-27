@@ -1,0 +1,260 @@
+/*
+ * FITTMM design tokens.
+ * Base: cool concrete and ink. One action color, "20 kg blue".
+ * Competition plate colors (red 25, blue 20, yellow 15, green 10, white 5)
+ * are reserved for data: body parts, days, plates.
+ */
+:root {
+  --concrete: #e8ebed;
+  --concrete-deep: #d9dee2;
+  --paper: #f8f9fa;
+  --ink: #18212b;
+  --ink-soft: #4a5562;
+  --ink-faint: #7b8692;
+  --rule: #c9d0d6;
+
+  --action: #1f4fbf;
+  --action-hover: #1a43a3;
+  --action-ink: #ffffff;
+  --focus: #1f4fbf;
+
+  --plate-red: #d7263d;
+  --plate-blue: #1f4fbf;
+  --plate-yellow: #f2b705;
+  --plate-green: #2e9e5b;
+  --plate-white: #f4f5f6;
+  --plate-black: #2a2f35;
+
+  --good: #1f7a46;
+  --bad: #b3261e;
+  --bad-bg: #fbe9e7;
+  --good-bg: #e6f4ec;
+
+  --font-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+
+  /* Type scale (1.25) */
+  --step--1: 0.875rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.563rem;
+  --step-3: 1.953rem;
+  --step-4: 2.441rem;
+  --step-5: 3.815rem;
+  --step-6: 5.96rem;
+
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+}
+
+:root[data-theme="dark"] {
+  --concrete: #161c22;
+  --concrete-deep: #1e262e;
+  --paper: #212a33;
+  --ink: #e9edf1;
+  --ink-soft: #b4bec8;
+  --ink-faint: #8794a1;
+  --rule: #34404b;
+
+  --action: #6f95ff;
+  --action-hover: #8eabff;
+  --action-ink: #0e1620;
+  --focus: #8eabff;
+
+  --plate-white: #dfe3e7;
+  --plate-black: #0d1116;
+
+  --good: #5ccb8a;
+  --bad: #ff8a80;
+  --bad-bg: #3a1d1b;
+  --good-bg: #16301f;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--concrete);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Shared primitives ---------- */
+.f-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+}
+
+.f-num {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.f-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-5);
+  border: 2px solid transparent;
+  border-radius: var(--radius-s);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.f-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.f-btn--primary {
+  background: var(--action);
+  color: var(--action-ink);
+}
+
+.f-btn--primary:hover:not(:disabled) {
+  background: var(--action-hover);
+}
+
+.f-btn--quiet {
+  background: transparent;
+  border-color: var(--rule);
+  color: var(--ink);
+}
+
+.f-btn--quiet:hover:not(:disabled) {
+  border-color: var(--ink-soft);
+}
+
+.f-btn--danger {
+  background: transparent;
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.f-btn--danger:hover:not(:disabled) {
+  background: var(--bad-bg);
+}
+
+.f-btn--block {
+  width: 100%;
+}
+
+.f-link {
+  color: var(--action);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.f-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.f-label {
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.f-input,
+.f-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 2px solid var(--rule);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+}
+
+.f-input:focus,
+.f-select:focus {
+  outline: none;
+  border-color: var(--focus);
+}
+
+.f-input[aria-invalid="true"] {
+  border-color: var(--bad);
+}
+
+.f-hint {
+  margin: 0;
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+}
+
+.f-alert {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--bad);
+  background: var(--bad-bg);
+  color: var(--ink);
+  font-size: var(--step--1);
+}
+
+.f-alert--ok {
+  border-left-color: var(--good);
+  background: var(--good-bg);
+}
+
+.f-panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m);
+  padding: var(--space-5);
+}
+
+.f-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

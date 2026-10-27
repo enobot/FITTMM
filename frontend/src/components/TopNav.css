@@ -1,0 +1,137 @@
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3) var(--space-6);
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+
+.topnav-mark {
+  font-size: var(--step-3);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.topnav-links {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.topnav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-s);
+  color: var(--ink-soft);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.topnav-link:hover {
+  color: var(--ink);
+  background: var(--concrete);
+}
+
+.topnav-link.active {
+  color: var(--ink);
+  box-shadow: inset 0 -3px 0 var(--action);
+  border-radius: 0;
+}
+
+.topnav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.topnav-menu {
+  position: relative;
+}
+
+.topnav-avatar {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--rule);
+  border-radius: 50%;
+  background: var(--concrete);
+  color: var(--ink);
+  font: 700 var(--step--1) var(--font-body);
+  cursor: pointer;
+}
+
+.topnav-avatar:hover {
+  border-color: var(--ink-soft);
+}
+
+.topnav-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 240px;
+  padding: var(--space-2);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m);
+  box-shadow: 0 12px 32px rgba(10, 20, 30, 0.18);
+}
+
+.topnav-who {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--step--1);
+}
+
+.topnav-who span {
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topnav-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--ink);
+  font: 500 var(--step-0) var(--font-body);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.topnav-item:hover {
+  background: var(--concrete);
+}
+
+@media (max-width: 760px) {
+  .topnav {
+    grid-template-columns: auto auto;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-4) 0;
+  }
+
+  .topnav-actions {
+    justify-self: end;
+  }
+
+  .topnav-links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    overflow-x: auto;
+  }
+
+  .topnav-record {
+    padding: 0 var(--space-3);
+  }
+}

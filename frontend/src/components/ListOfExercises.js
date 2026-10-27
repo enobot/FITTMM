@@ -4,9 +4,11 @@ import "./ListOfExercises.css";
 import {
   fetchPlan,
   selectionsFromApiPlan,
-  fetchExerciseCatalog,
   createCustomExercise,
 } from "../api/workoutApi";
+import { useExerciseCatalog, nameKey, invalidateExerciseCatalog } from "../hooks/useExerciseCatalog";
+
+const PAGE_SIZE = 60;
 
 const DAYS = [
   "Sunday",
@@ -67,7 +69,8 @@ function ListOfExercises() {
     location.state?.selectedByDay !== undefined ? location.state.selectedByDay : {}
   );
 
-  const [apiExercises, setApiExercises] = useState([]);
+  const { exercises: apiExercises, byName, reload: reloadCatalog } = useExerciseCatalog();
+  const [shownCount, setShownCount] = useState(PAGE_SIZE);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [customName, setCustomName] = useState("");
   const [bodyPartSelect, setBodyPartSelect] = useState("legs");
@@ -75,18 +78,14 @@ function ListOfExercises() {
   const [addSubmitting, setAddSubmitting] = useState(false);
   const [addError, setAddError] = useState("");
 
-  const reloadApiExercises = useCallback(async () => {
-    try {
-      const list = await fetchExerciseCatalog();
-      setApiExercises(Array.isArray(list) ? list : []);
-    } catch {
-      setApiExercises([]);
-    }
-  }, []);
+  const reloadApiExercises = useCallback(() => {
+    invalidateExerciseCatalog();
+    return reloadCatalog(true);
+  }, [reloadCatalog]);
 
   useEffect(() => {
-    reloadApiExercises();
-  }, [reloadApiExercises]);
+    setShownCount(PAGE_SIZE);
+  }, [query, filter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -131,9 +130,29 @@ function ListOfExercises() {
       }));
   }, [apiExercises]);
 
+  // Popular lifts first, then the user's own exercises, then the full photo library
+  const libraryRows = useMemo(() => {
+    const taken = new Set([
+      ...PRESET_NAMES_LOWER,
+      ...userAddedRows.map((r) => nameKey(r.name)),
+    ]);
+    return apiExercises
+      .filter((ex) => ex.userid == null && !taken.has(nameKey(ex.name)))
+      .map((ex) => ({
+        key: `lib-${ex.id}`,
+        name: ex.name,
+        group: ex.body_part || "back",
+        emoji: "🏋",
+      }));
+  }, [apiExercises, userAddedRows]);
+
   const catalog = useMemo(
-    () => [...PRESET_EXERCISES, ...userAddedRows],
-    [userAddedRows]
+    () =>
+      [...PRESET_EXERCISES, ...userAddedRows, ...libraryRows].map((row) => ({
+        ...row,
+        photo: byName.get(nameKey(row.name))?.image || null,
+      })),
+    [userAddedRows, libraryRows, byName]
   );
 
   const catalogFilterGroups = useMemo(() => {
@@ -284,7 +303,7 @@ function ListOfExercises() {
         </div>
 
         <div className="list-exercises-grid">
-          {items.map((exercise) => (
+          {items.slice(0, shownCount).map((exercise) => (
             <button
               key={exercise.key || exercise.name}
               type="button"
@@ -295,11 +314,20 @@ function ListOfExercises() {
               }`}
               onClick={() => toggleExercise(exercise.name)}
             >
-              <div className="list-exercises-img">{exercise.emoji}</div>
+              <div className={`list-exercises-img ${exercise.photo ? "list-exercises-img--photo" : ""}`}>
+                {exercise.photo ? <img src={exercise.photo} alt="" loading="lazy" /> : exercise.emoji}
+              </div>
               <div className="list-exercises-name">{exercise.name}</div>
             </button>
           ))}
         </div>
+        {items.length > shownCount ? (
+          <div className="list-exercises-more">
+            <button type="button" className="list-exercises-more-btn" onClick={() => setShownCount((n) => n + PAGE_SIZE)}>
+              Show more ({items.length - shownCount} left)
+            </button>
+          </div>
+        ) : null}
       </div>
       <div className="list-exercises-dots" aria-hidden>
         <span className="list-exercises-dot" />

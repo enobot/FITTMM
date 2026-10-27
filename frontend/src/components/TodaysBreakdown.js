@@ -10,6 +10,7 @@ function TodaysBreakdown({
   sessions = [],
   planLoading = false,
   sessionsLoading = false,
+  photoFor = () => null,
 }) {
   const navigate = useNavigate();
   const [hasWorkoutPlan, setHasWorkoutPlan] = useState(null);
@@ -192,7 +193,13 @@ function TodaysBreakdown({
                 >
                   <div className="workout-preview-exercise-col">
                     <p className="workout-preview-exercise-name">{exercise}</p>
-                    <div className="workout-preview-thumb">{exercise}</div>
+                    <div className="workout-preview-thumb">
+                      {photoFor(exercise) ? (
+                        <img className="workout-preview-photo" src={photoFor(exercise)} alt="" loading="lazy" />
+                      ) : (
+                        exercise
+                      )}
+                    </div>
                   </div>
 
                   <div className="workout-preview-srw-col">
