@@ -8,16 +8,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 12px;
+  padding: 0;
   box-sizing: border-box;
   text-align: center;
 }
 
+/* Matches the homepage's other section headings */
 .plate-calculator-title {
-  margin: 0 0 14px;
-  font-size: 1.35rem;
-  font-weight: 600;
-  color: #333;
+  align-self: flex-start;
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink);
   flex-shrink: 0;
 }
 

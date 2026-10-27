@@ -6,13 +6,14 @@ import PlateStack from "../components/PlateStack";
 import TodaysBreakdown from "../components/TodaysBreakdown";
 import PlateCalculator from "../components/PlateCalculator";
 import MyProgress from "../components/MyProgress";
+import BodyCard from "../components/BodyCard";
 import { fetchSessions } from "../api/workoutApi";
 import { getProfile, getVolume, localDateString } from "../api/accountApi";
 import { useWorkoutPlan } from "../hooks/useWorkoutPlan";
 import { useExerciseCatalog, nameKey } from "../hooks/useExerciseCatalog";
 import { useAuth } from "../auth/AuthContext";
 import { useTheme } from "../theme";
-import { formatHeight, formatVolume, formatWeight, weightUnit } from "../utils/units";
+import { formatVolume, weightUnit } from "../utils/units";
 
 const WEEK_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -67,11 +68,16 @@ function Homepage() {
     }
   }, []);
 
+  const reloadProfile = useCallback(
+    () => getProfile().then(setProfile).catch(() => setProfile(null)),
+    []
+  );
+
   useEffect(() => {
     reloadSessions();
     getVolume(14).then(setVolume).catch(() => setVolume(null));
-    getProfile().then(setProfile).catch(() => setProfile(null));
-  }, [reloadSessions, me?.id]);
+    reloadProfile();
+  }, [reloadSessions, reloadProfile, me?.id]);
 
   const unitSystem = profile?.unit_system || "imperial";
 
@@ -223,61 +229,30 @@ function Homepage() {
           </div>
         </section>
 
-        <div className="home-grid">
-          <section className="home-panel home-panel--breakdown" aria-label="Today's breakdown">
-            <TodaysBreakdown
-              selectedDay={selectedBreakdownDay}
-              planSelections={planSelections}
-              sessions={sessions}
-              planLoading={planLoading}
-              sessionsLoading={sessionsLoading}
-              photoFor={photoFor}
-            />
-          </section>
-          <section className="home-panel">
-            <MyProgress sessions={sessions} sessionsLoading={sessionsLoading} />
-          </section>
-        </div>
-
-        <div className="home-grid home-grid--tools">
-          <section className="home-panel home-body" aria-labelledby="home-body-title">
-            <div className="home-row-head">
-              <h2 id="home-body-title" className="homepage-section-title">
-                Body
-              </h2>
-              <Link to="/settings" className="f-link">
-                Update
-              </Link>
-            </div>
-            {profile && (profile.weight || profile.height) ? (
-              <dl className="home-stats">
-                <div>
-                  <dt>Weight</dt>
-                  <dd className="f-num">{formatWeight(profile.weight, unitSystem)}</dd>
-                </div>
-                <div>
-                  <dt>BMI</dt>
-                  <dd className="f-num">{profile.bmi ?? "—"}</dd>
-                  {profile.bmi_category ? <dd className="home-stats-note">{profile.bmi_category}</dd> : null}
-                </div>
-                <div>
-                  <dt>Height</dt>
-                  <dd className="f-num">{formatHeight(profile.height, unitSystem)}</dd>
-                </div>
-                <div>
-                  <dt>Goal</dt>
-                  <dd className="f-num">{profile.goal_weight ? formatWeight(profile.goal_weight, unitSystem) : "—"}</dd>
-                </div>
-              </dl>
-            ) : (
-              <p className="home-empty">
-                Add your height and weight in <Link to="/settings">Settings</Link> to see your BMI and weight trend.
-              </p>
-            )}
-          </section>
-          <section className="home-panel">
-            <PlateCalculator isDark={isDark} />
-          </section>
+        {/* Main column for training, side column for body and tools; each stacks on its own */}
+        <div className="home-lower">
+          <div className="home-main">
+            <section className="home-panel" aria-label="Session">
+              <TodaysBreakdown
+                selectedDay={selectedBreakdownDay}
+                planSelections={planSelections}
+                sessions={sessions}
+                planLoading={planLoading}
+                sessionsLoading={sessionsLoading}
+                photoFor={photoFor}
+                unitSystem={unitSystem}
+              />
+            </section>
+            <section className="home-panel">
+              <MyProgress sessions={sessions} sessionsLoading={sessionsLoading} />
+            </section>
+          </div>
+          <aside className="home-rail" aria-label="Body and tools">
+            <BodyCard profile={profile} onChanged={reloadProfile} />
+            <section className="home-panel">
+              <PlateCalculator isDark={isDark} />
+            </section>
+          </aside>
         </div>
       </main>
     </div>
